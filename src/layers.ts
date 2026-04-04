@@ -17,6 +17,9 @@ import CustomContent from "@arcgis/core/popup/content/CustomContent";
 import PopupTemplate from "@arcgis/core/PopupTemplate";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D.js";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer.js";
+import WebStyleSymbol from "@arcgis/core/symbols/WebStyleSymbol.js";
+import SizeVariable from "@arcgis/core/renderers/visualVariables/SizeVariable.js";
+import ColorVariable from "@arcgis/core/renderers/visualVariables/ColorVariable.js";
 
 import {
   barangayField,
@@ -49,56 +52,6 @@ import {
   valueLabelColor,
 } from "./uniqueValues";
 
-export const drone_video_point_layer = new FeatureLayer({
-  portalItem: {
-    id: "ef71df6d19294328a5b756c4806c9c67",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 2,
-  title: "Drone Video",
-  outFields: ["*"],
-  popupEnabled: false,
-  elevationInfo: {
-    mode: "relative-to-scene",
-  },
-});
-drone_video_point_layer.listMode = "hide";
-
-export const drone_image_point_layer = new FeatureLayer({
-  portalItem: {
-    id: "ef71df6d19294328a5b756c4806c9c67",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 1,
-  title: "Drone Image",
-  outFields: ["*"],
-  popupEnabled: false,
-
-  // popupTemplate: {
-  //   content: [
-  //     {
-  //       type: "media",
-  //       mediaInfos: [
-  //         {
-  //           title: `<a href='{path}' target="_blank">Drone Image</a>`,
-  //           type: "image",
-  //           caption: "Captured image",
-  //           value: {
-  //             sourceURL: "{path}",
-  //           },
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // },
-});
-drone_image_point_layer.listMode = "hide";
-
-/////////////////////////////
 /* Standalone table for Dates */
 export const dateTable = new FeatureLayer({
   portalItem: {
@@ -108,21 +61,6 @@ export const dateTable = new FeatureLayer({
     },
   },
 });
-
-//* SOMCO Fence */
-// const line_3d = new LineSymbol3D({
-//   symbolLayers: [
-//     new LineSymbol3DLayer({
-//       size: 5,
-//       material: { color: 'yellow' },
-//       cap: 'round',
-//       join: 'round',
-//       pattern: new LineStylePattern3D({
-//         style: 'solid',
-//       }),
-//     }),
-//   ],
-// });
 
 const line_3d = new LineSymbol3D({
   symbolLayers: [
@@ -163,6 +101,9 @@ export const somco_fense_layer = new FeatureLayer({
   popupEnabled: false,
 });
 
+//---------------------------------------------//
+//               Alignment                     //
+//---------------------------------------------//
 /* Chainage Layer  */
 const labelChainage = new LabelClass({
   labelExpressionInfo: { expression: "$feature.KmSpot" },
@@ -548,6 +489,298 @@ export const prow_tunnelLayer = new FeatureLayer({
   title: "PROW for Tunnel Alignment",
 });
 
+/* Station Layer */
+const labelClass = new LabelClass({
+  symbol: new LabelSymbol3D({
+    symbolLayers: [
+      new TextSymbol3DLayer({
+        material: {
+          color: "#d4ff33",
+        },
+        size: 15,
+        halo: {
+          color: "black",
+          size: 0.5,
+        },
+        // font: {
+        //   family: 'Ubuntu Mono',
+        //   //weight: "bold"
+        // },
+      }),
+    ],
+    verticalOffset: {
+      screenLength: 100,
+      maxWorldLength: 700,
+      minWorldLength: 80,
+    },
+
+    callout: {
+      type: "line", // autocasts as new LineCallout3D()
+      color: [128, 128, 128, 0.5],
+      size: 0.2,
+      border: {
+        color: "grey",
+      },
+    },
+  }),
+  labelPlacement: "above-center",
+  labelExpressionInfo: {
+    expression: "$feature.Station",
+    //value: "{TEXTSTRING}"
+  },
+});
+
+export const stationLayer = new FeatureLayer({
+  portalItem: {
+    id: "e09b9af286204939a32df019403ef438",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 6,
+  title: "SC Stations",
+  labelingInfo: [labelClass],
+  elevationInfo: {
+    mode: "relative-to-ground",
+  },
+});
+stationLayer.listMode = "hide";
+
+/* Pier Head and Column */
+const pHeight = 0;
+
+const pierColumn = new PolygonSymbol3D({
+  symbolLayers: [
+    new ExtrudeSymbol3DLayer({
+      size: pHeight + 10,
+      material: {
+        color: [78, 78, 78, 0.5],
+      },
+      edges: new SolidEdges3D({
+        color: "#4E4E4E",
+        size: 0.3,
+      }),
+    }),
+  ],
+});
+
+const pileCap = new PolygonSymbol3D({
+  symbolLayers: [
+    new ExtrudeSymbol3DLayer({
+      size: pHeight + 3,
+      material: {
+        color: [200, 200, 200, 0.7],
+      },
+      edges: new SolidEdges3D({
+        color: "#4E4E4E",
+        size: 1.0,
+      }),
+    }),
+  ],
+});
+
+const pierHeadRenderer = new UniqueValueRenderer({
+  // defaultSymbol: new PolygonSymbol3D({
+  //   symbolLayers: [
+  //     {
+  //       type: "extrude",
+  //       size: 5, // in meters
+  //       material: {
+  //         color: "#E1E1E1",
+  //       },
+  //       edges: new SolidEdges3D({
+  //         color: "#4E4E4E",
+  //         size: 1.0,
+  //       }),
+  //     },
+  //   ],
+  // }),
+  // defaultLabel: "Other",
+  field: "Layer",
+  legendOptions: {
+    title: "Pile Cap/Column",
+  },
+  uniqueValueInfos: [
+    {
+      value: "Pier_Column",
+      symbol: pierColumn,
+      label: "Column",
+    },
+    /*
+  {
+    value: "Pier_Head",
+    symbol: pierHead,
+    label: "Pier Head"
+  },
+  */
+    {
+      value: "Pile_Cap",
+      symbol: pileCap,
+      label: "Pile Cap",
+    },
+  ],
+});
+
+export const pierHeadColumnLayer = new FeatureLayer({
+  portalItem: {
+    id: "e09b9af286204939a32df019403ef438",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 4,
+  title: "Pile Cap/Column",
+  definitionExpression: "Layer <> 'Pier_Head'",
+
+  minScale: 150000,
+  maxScale: 0,
+  renderer: pierHeadRenderer,
+  popupEnabled: false,
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+});
+// pierHeadColumnLayer.listMode = "hide";
+
+/* Pier Access Point  */
+const defaultPierAccessLabel = new LabelClass({
+  symbol: new LabelSymbol3D({
+    symbolLayers: [
+      new TextSymbol3DLayer({
+        material: {
+          color: valueLabelColor,
+        },
+        size: 15,
+        font: {
+          family: "Ubuntu Mono",
+          weight: "bold",
+        },
+      }),
+    ],
+    verticalOffset: {
+      screenLength: 80,
+      maxWorldLength: 500,
+      minWorldLength: 30,
+    },
+    callout: {
+      type: "line",
+      size: 0.5,
+      color: [0, 0, 0],
+      border: {
+        color: [255, 255, 255, 0.7],
+      },
+    },
+  }),
+  labelExpressionInfo: {
+    expression: "$feature.PierNumber",
+    //'DefaultValue($feature.GeoTechName, "no data")'
+    //"IIF($feature.Score >= 13, '', '')"
+    //value: "{Type}"
+  },
+  labelPlacement: "above-center",
+  // where: 'AccessDate IS NULL',
+});
+
+export const pierAccessLayer = new FeatureLayer(
+  {
+    portalItem: {
+      id: "e09b9af286204939a32df019403ef438",
+      portal: {
+        url: "https://gis.railway-sector.com/portal",
+      },
+    },
+    layerId: 3,
+    labelingInfo: [defaultPierAccessLabel], // [pierAccessReadyDateLabel, pierAccessNotYetLabel, pierAccessDateMissingLabel], //[pierAccessDateMissingLabel, pierAccessReadyDateLabel, pierAccessNotYetLabel],
+    title: "Pier Number", //'Pier with Access Date',
+    minScale: 150000,
+    maxScale: 0,
+    popupEnabled: false,
+    elevationInfo: {
+      mode: "on-the-ground",
+    },
+  },
+  //{ utcOffset: 300 },
+);
+
+const cp_break_line_renderer = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#4ce600",
+    width: "2px",
+  }),
+});
+export const cp_break_lines = new FeatureLayer({
+  portalItem: {
+    id: "1a2be501a0f54e048a7200e482eb0dd5",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  title: "CP Break Line",
+  renderer: cp_break_line_renderer,
+  popupEnabled: false,
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+});
+
+/* For SC Substation */
+const scSubstationRenderer = new SimpleRenderer({
+  symbol: new SimpleFillSymbol({
+    color: [115, 178, 255],
+    style: "backward-diagonal",
+    outline: {
+      color: "#004DA8",
+      width: 1.5,
+    },
+  }),
+});
+
+export const substationLayer = new FeatureLayer({
+  portalItem: {
+    id: "fd0fd77c428b4fae8f47ac46b26614ec",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 61,
+  renderer: scSubstationRenderer,
+  popupEnabled: false,
+  labelsVisible: false,
+  title: "Substation",
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+});
+
+/* For SC Future Track */
+const scFutureTrack = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#C2C7FC",
+    width: "3px",
+    style: "solid",
+  }),
+});
+
+export const scFutureTrackLayer = new FeatureLayer({
+  portalItem: {
+    id: "a0ec0ab1c19c4927b0934b524e398a6a",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 64,
+  renderer: scFutureTrack,
+  popupEnabled: false,
+  labelsVisible: false,
+  title: "Future Track",
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+});
+
+//---------------------------------------------//
+//           Land, Structure, NLO              //
+//---------------------------------------------//
 /* PNR */
 const pnrRenderer = new UniqueValueRenderer({
   field: "OwnershipType",
@@ -625,63 +858,6 @@ export const pnrLayer = new FeatureLayer({
     ],
   },
 });
-
-/* Station Layer */
-const labelClass = new LabelClass({
-  symbol: new LabelSymbol3D({
-    symbolLayers: [
-      new TextSymbol3DLayer({
-        material: {
-          color: "#d4ff33",
-        },
-        size: 15,
-        halo: {
-          color: "black",
-          size: 0.5,
-        },
-        // font: {
-        //   family: 'Ubuntu Mono',
-        //   //weight: "bold"
-        // },
-      }),
-    ],
-    verticalOffset: {
-      screenLength: 100,
-      maxWorldLength: 700,
-      minWorldLength: 80,
-    },
-
-    callout: {
-      type: "line", // autocasts as new LineCallout3D()
-      color: [128, 128, 128, 0.5],
-      size: 0.2,
-      border: {
-        color: "grey",
-      },
-    },
-  }),
-  labelPlacement: "above-center",
-  labelExpressionInfo: {
-    expression: "$feature.Station",
-    //value: "{TEXTSTRING}"
-  },
-});
-
-export const stationLayer = new FeatureLayer({
-  portalItem: {
-    id: "e09b9af286204939a32df019403ef438",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 6,
-  title: "SC Stations",
-  labelingInfo: [labelClass],
-  elevationInfo: {
-    mode: "relative-to-ground",
-  },
-});
-stationLayer.listMode = "hide";
 
 /* The colors used for the each transit line */
 const lotIdLabel = new LabelClass({
@@ -890,32 +1066,6 @@ const handedOverLotRenderer = new UniqueValueRenderer({
   ],
 });
 
-// uniqueValueInfos: [
-//   {
-//     value: "Handed-Over",
-//     label: "Handed-Over",
-//     symbol: new SimpleFillSymbol({
-//   })
-//   })
-
-// const handedOverLotRenderer = new UniqueValueRenderer({
-//   field: "HandedOver",
-
-//   uniqueValueInfos: [
-//     {
-//       value: 1,
-//       label: "Handed-Over",
-//       symbol: new SimpleFillSymbol({
-//         color: [0, 255, 255, 0.3], //[0, 255, 255, 0.1], #00ffff
-//         outline: new SimpleLineSymbol({
-//           color: "#00ffff",
-//           width: "4px",
-//         }),
-//       }),
-//     },
-//   ],
-// });
-
 export const handedOverLotLayer = new FeatureLayer({
   portalItem: {
     id: "99500faf0251426ea1df934a739faa6f",
@@ -969,94 +1119,6 @@ export const tunnelAffectedLotLayer = new FeatureLayer({
     mode: "on-the-ground",
   },
 });
-
-/* Endorsed Lot Layer */
-// Endorsed lot layer
-// let endorsedLayerRenderer = new UniqueValueRenderer({
-//   field: 'Endorsed',
-//   defaultSymbol: lotDefaultSymbol,
-//   uniqueValueInfos: [
-//     {
-//       value: 0,
-//       label: 'Not Endorsed',
-//       symbol: new SimpleFillSymbol({
-//         color: colorLotReqs[5],
-//       }),
-//     },
-//     {
-//       value: 1,
-//       label: 'Endorsed',
-//       symbol: new SimpleFillSymbol({
-//         color: colorLotReqs[2],
-//       }),
-//     },
-//     {
-//       value: 2,
-//       label: 'NA',
-//       symbol: new SimpleFillSymbol({
-//         color: [211, 211, 211, 0.7],
-//       }),
-//     },
-//   ],
-// });
-
-// export const endorsedLotLayer = new FeatureLayer({
-//   portalItem: {
-//     id: 'dca1d785da0f458b8f87638a76918496',
-//     portal: {
-//       url: 'https://gis.railway-sector.com/portal',
-//     },
-//   },
-//   layerId: 7,
-//   renderer: endorsedLayerRenderer,
-//   labelingInfo: [lotIdLabel],
-//
-//   title: 'Land Acquisition (Endorsed Status)',
-//   minScale: 150000,
-//   maxScale: 0,
-//   //labelsVisible: false,
-//   elevationInfo: {
-//     mode: 'on-the-ground',
-//   },
-// });
-// endorsedLotLayer.popupTemplate = templateLot;
-
-/* Supre Urgent Lots */
-// const superUrgentLotRenderer = new UniqueValueRenderer({
-//   field: 'Urgent',
-
-//   uniqueValueInfos: [
-//     {
-//       value: 0,
-//       label: 'Super Urgent',
-//       symbol: new SimpleFillSymbol({
-//         color: [255, 0, 0, 0],
-//         outline: {
-//           color: [255, 0, 0, 1],
-//           width: 0.3,
-//         },
-//       }),
-//     },
-//   ],
-// });
-
-// export const superUrgentLotLayer = new FeatureLayer({
-//   portalItem: {
-//     id: 'dca1d785da0f458b8f87638a76918496',
-//     portal: {
-//       url: 'https://gis.railway-sector.com/portal',
-//     },
-//   },
-//   layerId: 7,
-//   definitionExpression: 'Urgent = 0',
-//   renderer: superUrgentLotRenderer,
-//   popupEnabled: false,
-//   labelsVisible: false,
-//   title: 'Super Urgent Lot',
-//   elevationInfo: {
-//     mode: 'on-the-ground',
-//   },
-// });
 
 /* contractor accessible layer */
 const accessible_renderer = new SimpleRenderer({
@@ -1396,238 +1458,6 @@ export const occupancyLayer = new FeatureLayer({
   },
 });
 
-/* Pier Head and Column */
-const pHeight = 0;
-
-const pierColumn = new PolygonSymbol3D({
-  symbolLayers: [
-    new ExtrudeSymbol3DLayer({
-      size: pHeight + 10,
-      material: {
-        color: [78, 78, 78, 0.5],
-      },
-      edges: new SolidEdges3D({
-        color: "#4E4E4E",
-        size: 0.3,
-      }),
-    }),
-  ],
-});
-
-const pileCap = new PolygonSymbol3D({
-  symbolLayers: [
-    new ExtrudeSymbol3DLayer({
-      size: pHeight + 3,
-      material: {
-        color: [200, 200, 200, 0.7],
-      },
-      edges: new SolidEdges3D({
-        color: "#4E4E4E",
-        size: 1.0,
-      }),
-    }),
-  ],
-});
-
-const pierHeadRenderer = new UniqueValueRenderer({
-  // defaultSymbol: new PolygonSymbol3D({
-  //   symbolLayers: [
-  //     {
-  //       type: "extrude",
-  //       size: 5, // in meters
-  //       material: {
-  //         color: "#E1E1E1",
-  //       },
-  //       edges: new SolidEdges3D({
-  //         color: "#4E4E4E",
-  //         size: 1.0,
-  //       }),
-  //     },
-  //   ],
-  // }),
-  // defaultLabel: "Other",
-  field: "Layer",
-  legendOptions: {
-    title: "Pile Cap/Column",
-  },
-  uniqueValueInfos: [
-    {
-      value: "Pier_Column",
-      symbol: pierColumn,
-      label: "Column",
-    },
-    /*
-  {
-    value: "Pier_Head",
-    symbol: pierHead,
-    label: "Pier Head"
-  },
-  */
-    {
-      value: "Pile_Cap",
-      symbol: pileCap,
-      label: "Pile Cap",
-    },
-  ],
-});
-
-export const pierHeadColumnLayer = new FeatureLayer({
-  portalItem: {
-    id: "e09b9af286204939a32df019403ef438",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 4,
-  title: "Pile Cap/Column",
-  definitionExpression: "Layer <> 'Pier_Head'",
-
-  minScale: 150000,
-  maxScale: 0,
-  renderer: pierHeadRenderer,
-  popupEnabled: false,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-// pierHeadColumnLayer.listMode = "hide";
-
-/* Pier Access Point  */
-const defaultPierAccessLabel = new LabelClass({
-  symbol: new LabelSymbol3D({
-    symbolLayers: [
-      new TextSymbol3DLayer({
-        material: {
-          color: valueLabelColor,
-        },
-        size: 15,
-        font: {
-          family: "Ubuntu Mono",
-          weight: "bold",
-        },
-      }),
-    ],
-    verticalOffset: {
-      screenLength: 80,
-      maxWorldLength: 500,
-      minWorldLength: 30,
-    },
-    callout: {
-      type: "line",
-      size: 0.5,
-      color: [0, 0, 0],
-      border: {
-        color: [255, 255, 255, 0.7],
-      },
-    },
-  }),
-  labelExpressionInfo: {
-    expression: "$feature.PierNumber",
-    //'DefaultValue($feature.GeoTechName, "no data")'
-    //"IIF($feature.Score >= 13, '', '')"
-    //value: "{Type}"
-  },
-  labelPlacement: "above-center",
-  // where: 'AccessDate IS NULL',
-});
-
-export const pierAccessLayer = new FeatureLayer(
-  {
-    portalItem: {
-      id: "e09b9af286204939a32df019403ef438",
-      portal: {
-        url: "https://gis.railway-sector.com/portal",
-      },
-    },
-    layerId: 3,
-    labelingInfo: [defaultPierAccessLabel], // [pierAccessReadyDateLabel, pierAccessNotYetLabel, pierAccessDateMissingLabel], //[pierAccessDateMissingLabel, pierAccessReadyDateLabel, pierAccessNotYetLabel],
-    title: "Pier Number", //'Pier with Access Date',
-    minScale: 150000,
-    maxScale: 0,
-    popupEnabled: false,
-    elevationInfo: {
-      mode: "on-the-ground",
-    },
-  },
-  //{ utcOffset: 300 },
-);
-
-const cp_break_line_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#4ce600",
-    width: "2px",
-  }),
-});
-export const cp_break_lines = new FeatureLayer({
-  portalItem: {
-    id: "1a2be501a0f54e048a7200e482eb0dd5",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  title: "CP Break Line",
-  renderer: cp_break_line_renderer,
-  popupEnabled: false,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-
-/* For SC Substation */
-const scSubstationRenderer = new SimpleRenderer({
-  symbol: new SimpleFillSymbol({
-    color: [115, 178, 255],
-    style: "backward-diagonal",
-    outline: {
-      color: "#004DA8",
-      width: 1.5,
-    },
-  }),
-});
-
-export const substationLayer = new FeatureLayer({
-  portalItem: {
-    id: "fd0fd77c428b4fae8f47ac46b26614ec",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 61,
-  renderer: scSubstationRenderer,
-  popupEnabled: false,
-  labelsVisible: false,
-  title: "Substation",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-
-/* For SC Future Track */
-const scFutureTrack = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#C2C7FC",
-    width: "3px",
-    style: "solid",
-  }),
-});
-
-export const scFutureTrackLayer = new FeatureLayer({
-  portalItem: {
-    id: "a0ec0ab1c19c4927b0934b524e398a6a",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 64,
-  renderer: scFutureTrack,
-  popupEnabled: false,
-  labelsVisible: false,
-  title: "Future Track",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-
 // Group layers //
 export const alignmentGroupLayer = new GroupLayer({
   title: "Alignment",
@@ -1683,4 +1513,224 @@ export const ngcp7_groupLayer = new GroupLayer({
   visibilityMode: "independent",
   // layers: [ngcp_line7, ngcp_pole7, ngcp_working_area7],
   layers: [ngcp_line7, ngcp_pole7],
+});
+
+//---------------------------------------------//
+//        Tree Cutting & Compensation          //
+//---------------------------------------------//
+/* Tree cutting layer */
+const treeCutting3DSymbol = (name: any) => {
+  return new WebStyleSymbol({
+    name: name,
+    styleName: "EsriThematicTreesStyle",
+  });
+};
+
+const treeCuttingRenderer = new UniqueValueRenderer({
+  field: "Status",
+  uniqueValueInfos: [
+    {
+      value: 1,
+      label: "Cut/Earthballed",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+    {
+      value: 2,
+      label: "Permit Acquired",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+    {
+      value: 3,
+      label: "Submitted to DENR",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+    {
+      value: 4,
+      label: "Ongoing Acquisition of Application Documents",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+  ],
+  visualVariables: [
+    new SizeVariable({
+      axis: "height",
+      // field: 'SIZE',
+      valueExpression: "When($feature.Status >= 1, 5, 0)",
+      valueUnit: "meters",
+    }),
+    new ColorVariable({
+      valueExpression: "$feature.Status",
+      valueExpressionTitle: "Status Color",
+      stops: [
+        { value: 1, color: "#71AB48" },
+        { value: 2, color: "#FFFF00" },
+        { value: 3, color: "#FFAA00" },
+        { value: 4, color: "#FF0000" },
+      ],
+      legendOptions: {
+        title: "",
+        showLegend: false,
+      },
+    }),
+  ],
+});
+
+export const treeCuttingLayer = new FeatureLayer({
+  portalItem: {
+    id: "dfd0bca99c754002b55459004b684415",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 2,
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+
+  title: "Tree Cutting",
+  renderer: treeCuttingRenderer,
+  popupTemplate: {
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "ScientificName",
+            label: "Scientific Name",
+          },
+          {
+            fieldName: "CommonName",
+            label: "Common Name",
+          },
+          {
+            fieldName: "Province",
+          },
+          {
+            fieldName: "Municipality",
+          },
+          {
+            fieldName: "TreeNo",
+            label: "Tree No.",
+          },
+          {
+            fieldName: "CP",
+            label: "<h5>CP</h5>",
+          },
+          {
+            fieldName: "Compensation",
+            label: "Status of Tree Compensation",
+          },
+          {
+            fieldName: "Conservation",
+            label: "Conservation Status",
+          },
+        ],
+      },
+    ],
+  },
+});
+
+/* Tree compensation layer */
+const treeCompensationRenderer = new UniqueValueRenderer({
+  field: "Compensation",
+  uniqueValueInfos: [
+    {
+      value: 1,
+      label: "Non-Compensable",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+    {
+      value: 2,
+      label: "For Processing",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+    {
+      value: 3,
+      label: "Compensated",
+      symbol: treeCutting3DSymbol("Larix"),
+    },
+  ],
+  visualVariables: [
+    new SizeVariable({
+      axis: "height",
+      valueExpression: "When($feature.Compensation >= 1, 5, 0)",
+      valueUnit: "meters",
+    }),
+    new ColorVariable({
+      valueExpression: "$feature.Compensation",
+      valueExpressionTitle: "Status Color",
+      legendOptions: {
+        title: "",
+        showLegend: false,
+      },
+      stops: [
+        { value: 1, color: "#0070FF" },
+        { value: 2, color: "#FFFF00" },
+        { value: 3, color: "#71AB48" },
+      ],
+    }),
+  ],
+});
+
+export const treeCompensationLayer = new FeatureLayer({
+  portalItem: {
+    id: "dfd0bca99c754002b55459004b684415",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 2,
+
+  title: "Tree Compensation",
+  renderer: treeCompensationRenderer,
+  popupTemplate: {
+    title: "<div style='color: #eaeaea'>{Compensation}</div>",
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "ScientificName",
+            label: "Scientific Name",
+          },
+          {
+            fieldName: "CommonName",
+            label: "Common Name",
+          },
+          {
+            fieldName: "Province",
+          },
+          {
+            fieldName: "Municipality",
+          },
+          {
+            fieldName: "TreeNo",
+            label: "Tree No.",
+          },
+          {
+            fieldName: "CP",
+            label: "<h5>CP</h5>",
+          },
+          {
+            fieldName: "Status",
+            label: "Status of Tree Cutting",
+          },
+          {
+            fieldName: "Conservation",
+            label: "Conservation Status",
+          },
+        ],
+      },
+    ],
+  },
+});
+
+export const treeGroupLayer = new GroupLayer({
+  title: "Tree Cutting & Compensation",
+  visible: false,
+  visibilityMode: "exclusive",
+  layers: [treeCompensationLayer, treeCuttingLayer],
 });

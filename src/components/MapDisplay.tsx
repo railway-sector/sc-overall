@@ -1,0 +1,100 @@
+import "@arcgis/map-components/components/arcgis-expand";
+import "@arcgis/map-components/components/arcgis-legend";
+import "@arcgis/map-components/components/arcgis-map";
+import "@arcgis/map-components/components/arcgis-scene";
+import "@arcgis/map-components/components/arcgis-search";
+import "@arcgis/map-components/components/arcgis-zoom";
+import "@esri/calcite-components/components/calcite-shell";
+import "@esri/calcite-components/components/calcite-navigation";
+import "@esri/calcite-components/components/calcite-navigation-logo";
+import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
+import {
+  structureLayer,
+  stationLayer,
+  alignmentGroupLayer,
+  nloLoOccupancyGroupLayer,
+  lotGroupLayer,
+  lotLayer,
+  ngcp7_groupLayer,
+  ngcp6_groupLayer,
+  somco_fense_layer,
+  handedOverLotLayer,
+  pierAccessLayer,
+  treeGroupLayer,
+} from "../layers";
+import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
+
+export default function MapDisplay() {
+  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+  const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
+
+  arcgisScene?.viewOnReady(() => {
+    arcgisScene?.map?.add(pierAccessLayer);
+    arcgisScene?.map?.add(treeGroupLayer);
+    arcgisScene?.map?.add(lotGroupLayer);
+    arcgisScene?.map?.add(ngcp7_groupLayer);
+    arcgisScene?.map?.add(ngcp6_groupLayer);
+    arcgisScene?.map?.add(structureLayer);
+    arcgisScene?.map?.add(nloLoOccupancyGroupLayer);
+    arcgisScene?.map?.add(alignmentGroupLayer);
+    arcgisScene?.map?.add(stationLayer);
+    arcgisScene?.map?.add(somco_fense_layer);
+    arcgisScene?.map?.add(handedOverLotLayer);
+
+    // Search components
+    const sources: any = [
+      {
+        layer: lotLayer,
+        searchFields: ["LotID"],
+        displayField: "LotID",
+        exactMatch: false,
+        outFields: ["LotID"],
+        name: "Lot ID",
+        placeholder: "example: 10083",
+      },
+      {
+        layer: structureLayer,
+        searchFields: ["StrucID"],
+        displayField: "StrucID",
+        exactMatch: false,
+        outFields: ["StrucID"],
+        name: "Structure ID",
+        placeholder: "example: NSRP-01-02-ML007",
+      },
+      {
+        layer: pierAccessLayer,
+        searchFields: ["PierNumber"],
+        displayField: "PierNumber",
+        exactMatch: false,
+        outFields: ["PierNumber"],
+        name: "Pier No",
+        zoomScale: 1000,
+        placeholder: "example: P-288",
+      },
+    ];
+
+    arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
+    arcgisSearch.includeDefaultSourcesDisabled = true;
+    arcgisSearch.locationDisabled = true;
+    arcgisScene.hideAttribution = true;
+    arcgisSearch?.sources.push(...sources);
+  });
+
+  return (
+    <>
+      <arcgis-scene
+        basemap="dark-gray-vector"
+        ground="world-elevation"
+        viewingMode="local"
+        center="121.05, 14.4"
+        zoom={12}
+      >
+        <arcgis-compass slot="top-right"></arcgis-compass>
+        <arcgis-expand close-on-esc slot="top-right" mode="floating">
+          <arcgis-search></arcgis-search>
+        </arcgis-expand>
+        <arcgis-zoom slot="bottom-right"></arcgis-zoom>
+      </arcgis-scene>
+    </>
+  );
+}
