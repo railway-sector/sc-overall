@@ -8,6 +8,7 @@ import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
 import MainChart from "./components/MainChart";
 import { contractPackage } from "./uniqueValues";
+import UndergroundSwitch from "./components/UndergroundSwitch";
 
 export function App(): React.JSX.Element {
   const [loggedInState, setLoggedInState] = useState<boolean>(false);
@@ -134,6 +135,7 @@ export function App(): React.JSX.Element {
               updateNewHandedOverfield,
             }}
           >
+            <UndergroundSwitch />
             <MainChart />
             <ActionPanel />
             <MapDisplay />

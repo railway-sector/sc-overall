@@ -1,5 +1,18 @@
 import Collection from "@arcgis/core/core/Collection";
 import ActionButton from "@arcgis/core/support/actions/ActionButton";
+import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
+import LabelSymbol3D from "@arcgis/core/symbols/LabelSymbol3D";
+import LineCallout3D from "@arcgis/core/symbols/callouts/LineCallout3D";
+
+//--- type definitions
+export type StatusTypenamesType =
+  | "To be Constructed"
+  | "Under Construction"
+  | "Completed";
+export type StatusStateType = "comp" | "incomp" | "ongoing";
+export type LayerNameType = "utility" | "viaduct" | "others";
+
+//---
 
 export const contractPackage = [
   "All",
@@ -321,6 +334,253 @@ export const statusTreeCompensationChart = [
     color: colorsCompen[2],
   },
 ];
+
+//---------------------------------------------//
+//             Utility Relocation              //
+//---------------------------------------------//
+
+//--- Utility Type
+export const utility_statusField = "Status";
+export const utility_typeField = "UtilType";
+export const utilityTypes = ["Telecom", "Water", "Sewage", "Power"];
+const utilityType_domain = [1, 2, 3, 4];
+export const utilityTypeChart = utilityTypes.map((type: any, index: any) => {
+  return Object.assign({
+    category: type,
+    value: utilityType_domain[index],
+  });
+});
+
+//----
+interface labelSymbol3DProps {
+  materialColor: any;
+  fontSize?: number;
+  fontFamily?: string;
+  fontWeight?: "normal" | "bold";
+  haloColor?: any;
+  haloSize?: number;
+  vOffsetScreenLength?: number;
+  vOffsetMaxWorldLength?: number;
+  vOffsetMinWorldLength?: number;
+  calloutType?: number;
+  calloutColor?: any;
+  calloutSize?: number;
+  calloutBorderColor?: any;
+}
+
+export const labelSymbol3DLine = ({
+  materialColor,
+  fontSize,
+  fontFamily,
+  fontWeight,
+  haloColor,
+  haloSize,
+  vOffsetScreenLength,
+  vOffsetMaxWorldLength,
+  vOffsetMinWorldLength,
+  calloutColor,
+  calloutSize,
+  calloutBorderColor,
+}: labelSymbol3DProps) => {
+  const labelSymbol3D = new LabelSymbol3D({
+    symbolLayers: [
+      new TextSymbol3DLayer({
+        material: {
+          color: materialColor,
+        },
+        size: fontSize,
+        font: {
+          family: fontFamily,
+          weight: fontWeight,
+        },
+        halo: {
+          color: haloColor,
+          size: haloSize,
+        },
+      }),
+    ],
+    verticalOffset: {
+      screenLength: vOffsetScreenLength,
+      maxWorldLength: vOffsetMaxWorldLength,
+      minWorldLength: vOffsetMinWorldLength,
+    },
+    callout: new LineCallout3D({
+      color: calloutColor,
+      size: calloutSize,
+      border: {
+        color: calloutBorderColor,
+      },
+    }),
+  });
+
+  return labelSymbol3D;
+};
+
+//--- UtilityType2 parameters
+export const utilType2_values = [
+  "Telecom Pole (BTS)",
+  "Telecom Pole (CATV)",
+  "Water Meter",
+  "Water Valve",
+  "Manhole",
+  "Drain Box",
+  "Electric Pole",
+  "Street Light",
+  "Junction Box",
+  "Coupling",
+  "Fitting",
+  "Transformer",
+  "Truss Guy",
+  "Concrete Pedestal",
+  "Ground",
+  "Down Guy",
+  "Entry/Exit Pit",
+  "Handhole",
+  "Transmission Tower",
+];
+
+export const customSymbol3D_names = [
+  "3D_Telecom_BTS",
+  "3D_TelecomCATV_Pole",
+  "Storm_Drain",
+  "3D_Electric_Pole",
+  "Overhanging_Street_and_Sidewalk_-_Light_on",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "Concrete Pedestal",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "3D_Drain_Box",
+  "Powerline_Pole",
+];
+
+export const utilType2_domain = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+];
+
+//--- Utility status parameters
+export const utilLineColor = [
+  [32, 178, 170, 0.5], //Telecom Line
+  [112, 128, 144, 0.5], // Internet Cable Line
+  [0, 128, 255, 0.5], // Water Distribution Pipe
+  [224, 224, 224, 0.5], // Sewage
+  [105, 105, 105, 0.5], // Drainage
+  [205, 133, 63, 0.5], // Canal
+  [139, 69, 19, 0.5], // Creek
+  [211, 211, 211, 0.5], // Electric Line
+  [0, 128, 255, 0.5], // Duct Bank
+  [0, 128, 255, 0.5], // Water line
+  [0, 128, 255, 0.5], // Gas Line
+];
+
+export const utilityStatus_values = [
+  "DemolishIncomplete",
+  "DemolishComplete",
+  "RelocIncomplete",
+  "RelocComplete",
+  "NewlyAdded",
+  "NewlyAddedComplete",
+  "NoAction",
+];
+
+export const utilityStatus_labels = [
+  "To be Demolished",
+  "Demolision Completed",
+  "Proposed Relocation",
+  "Relocation Completed",
+  "Add New Utility",
+  "Newly Utility Added",
+  "Require Data Checking",
+];
+
+export const utilityStatus_symbols = [
+  "https://EijiGorilla.github.io/Symbols/Demolished.png",
+  "https://EijiGorilla.github.io/Symbols/DemolishComplete_v2.png",
+  "https://EijiGorilla.github.io/Symbols/Relocatd.png",
+  "https://EijiGorilla.github.io/Symbols/Utility_Relocated_Completed_Symbol.png",
+  "https://EijiGorilla.github.io/Symbols/NewlyAdded.png",
+  "https://EijiGorilla.github.io/Symbols/NewlyAdded_Completed.png",
+  "https://EijiGorilla.github.io/Symbols/Unknown_v2.png",
+];
+
+export const utilityStatus_symbolColor = [
+  "#D13470",
+  "#D13470",
+  "#D13470",
+  "#D13470",
+  "#D13470",
+  "#D13470",
+  "#D13470",
+];
+
+export const utilityStatus_symbolSize = [20, 25, 30, 30, 35, 35, 35];
+
+//---------------------------------------------//
+//                    Viaduct                   //
+//---------------------------------------------//
+//--- field definitions
+export const type_field = "Type";
+export const status_field = "Status";
+
+//--- Layer types
+export const viaductStatusLabel = [
+  "To be Constructed",
+  "Under Construction",
+  "Delayed",
+  "Completed",
+];
+
+export const viaductStatusColorForChart = [
+  "#000000",
+  "#f7f7f7ff",
+  "#FF0000",
+  "#0070ff",
+];
+
+export const viaductStatusColorForLayer = [
+  [225, 225, 225, 0.1], // To be Constructed (white)
+  [211, 211, 211, 0.5], // Under Construction
+  [255, 0, 0, 0.8], // Delayed
+  [0, 112, 255, 0.8], // Completed
+];
+
+//--- Viaduct types
+const viaduct_category_label = [
+  "Bored Pile",
+  "Pile Cap",
+  "Pier",
+  "Pier Head",
+  "Precast",
+  "At-Grade",
+  "Noise Barrier",
+  "Others",
+];
+
+const viaduct_category_value = [1, 2, 3, 4, 5, 7, 8, 0];
+const viaduct_category_icon = [
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pile_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pilecap_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pier_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pierhead_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
+  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
+];
+// Generate chart data
+export const viatypes = viaduct_category_label.map(
+  (category: any, index: any) => {
+    return Object.assign({
+      category: category,
+      value: viaduct_category_value[index],
+      icon: viaduct_category_icon[index],
+    });
+  },
+);
 
 //---------------------------------------------//
 //              Layer List                     //

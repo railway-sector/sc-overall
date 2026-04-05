@@ -14,6 +14,9 @@ import { primaryLabelColor } from "../uniqueValues";
 import { useState } from "react";
 import TreeCuttingChart from "./TreeCuttingChart";
 import TreeCompensationChart from "./TreeCompensationChart";
+import ViaductChart from "./ViaductChart";
+import UtilityPointChart from "./UtilityPointChart";
+import UtilityLineChart from "./UtilityLineChart";
 
 function MainChart() {
   const [panelWidth, setPanelWidth] = useState<string>("40%");
@@ -30,6 +33,7 @@ function MainChart() {
       setPanelHeader("Chart");
     }
   };
+
   return (
     <>
       <calcite-panel
@@ -46,9 +50,7 @@ function MainChart() {
           borderRightWidth: 5,
           borderLeftWidth: 5,
           borderBottomWidth: 5,
-          // borderTopWidth: 5,
           borderColor: "#555555",
-          // width: "40%",
           width: panelWidth,
           overflowY: "auto",
           display: "block", // without adding display, background will not disappear.
@@ -62,7 +64,6 @@ function MainChart() {
             borderRightWidth: 1,
             borderLeftWidth: 1,
             borderBottomWidth: 1,
-            // borderTopWidth: 5,
             borderColor: "#555555",
             backgroundColor: "#2b2b2b",
           }}
@@ -78,6 +79,8 @@ function MainChart() {
               Households
             </calcite-tab-title>
             <calcite-tab-title className="Households">Tree</calcite-tab-title>
+            <calcite-tab-title className="Utility">Utility</calcite-tab-title>
+            <calcite-tab-title className="Viaduct">Viaduct</calcite-tab-title>
           </calcite-tab-nav>
 
           {/* CalciteTab: Lot */}
@@ -95,10 +98,21 @@ function MainChart() {
             <NloChart />
           </calcite-tab>
 
-          {/* CalciteTab: List of Lots under Expropriation */}
+          {/* CalciteTab: Tree Cutting & Compensation */}
           <calcite-tab>
             <TreeCuttingChart />
             <TreeCompensationChart />
+          </calcite-tab>
+
+          {/* CalciteTab: Viaduct */}
+          <calcite-tab>
+            <UtilityPointChart />
+            <UtilityLineChart />
+          </calcite-tab>
+
+          {/* CalciteTab: Viaduct */}
+          <calcite-tab>
+            <ViaductChart />
           </calcite-tab>
         </calcite-tabs>
       </calcite-panel>

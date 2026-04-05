@@ -20,12 +20,15 @@ import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer.js";
 import WebStyleSymbol from "@arcgis/core/symbols/WebStyleSymbol.js";
 import SizeVariable from "@arcgis/core/renderers/visualVariables/SizeVariable.js";
 import ColorVariable from "@arcgis/core/renderers/visualVariables/ColorVariable.js";
+import RotationVariable from "@arcgis/core/renderers/visualVariables/RotationVariable.js";
+import SceneLayer from "@arcgis/core/layers/SceneLayer";
 
 import {
   barangayField,
   cpField,
   endorsedField,
   endorsedStatus,
+  labelSymbol3DLine,
   landOwnerField,
   landUseField,
   lotHandedOverDateField,
@@ -49,6 +52,7 @@ import {
   structureStatusField,
   structureStatusLabel,
   tunnelAffectLotField,
+  utilLineColor,
   valueLabelColor,
 } from "./uniqueValues";
 
@@ -1733,4 +1737,759 @@ export const treeGroupLayer = new GroupLayer({
   visible: false,
   visibilityMode: "exclusive",
   layers: [treeCompensationLayer, treeCuttingLayer],
+});
+
+//---------------------------------------------//
+//           Utility Relocation                //
+//---------------------------------------------//
+// * Utility Point * //
+// * Utility Point * //
+function customSymbol3D(name: string) {
+  return new WebStyleSymbol({
+    //portal: 'https://www.maps.arcgis.com',
+    // IMPORTANT: Your browser needs to be able to open the following link. It will say insecure so need to go to advanced.
+    styleUrl:
+      "https://www.maps.arcgis.com/sharing/rest/content/items/c04d4d4145f64f8fa38407dd5331dd1f/data",
+    name: name,
+  });
+}
+
+function utilPtSymbolInfra(name: string) {
+  return new WebStyleSymbol({
+    name: name,
+    styleName: "EsriInfrastructureStyle",
+  });
+}
+
+function utilPtSymbolStreet(name: string) {
+  return new WebStyleSymbol({
+    name: name,
+    styleName: "EsriRealisticStreetSceneStyle",
+  });
+}
+
+const verticalOffsetRelocation = {
+  screenLength: 10,
+  maxWorldLength: 30,
+  minWorldLength: 35,
+};
+
+// Function that automatically creates the symbol for the points of interest
+function getUniqueValueSymbol(name: string, color: any, sizeS: number) {
+  return new PointSymbol3D({
+    symbolLayers: [
+      new IconSymbol3DLayer({
+        resource: {
+          href: name,
+        },
+        size: sizeS,
+        outline: {
+          color: color,
+          size: 2,
+        },
+      }),
+    ],
+
+    verticalOffset: verticalOffsetRelocation,
+
+    callout: {
+      type: "line", // autocasts as new LineCallout3D()
+      color: [128, 128, 128, 0.1],
+      size: 0.2,
+      border: {
+        color: "grey",
+      },
+    },
+  });
+}
+
+const utilPointSymbolRenderer = new UniqueValueRenderer({
+  valueExpression:
+    // eslint-disable-next-line no-multi-str
+    "When($feature.UtilType2 == 1, 'Telecom Pole (BTS)', \
+                          $feature.UtilType2 == 2, 'Telecom Pole (CATV)', \
+                          $feature.UtilType2 == 3, 'Water Meter', \
+                          $feature.UtilType2 == 4, 'Water Valve', \
+                          $feature.UtilType2 == 5, 'Manhole', \
+                          $feature.UtilType2 == 6, 'Drain Box', \
+                          $feature.UtilType2 == 7, 'Electric Pole', \
+                          $feature.UtilType2 == 8, 'Street Light', \
+                          $feature.UtilType2 == 9, 'Junction Box', \
+                          $feature.UtilType2 == 10, 'Coupling', \
+                          $feature.UtilType2 == 11, 'Fitting', \
+                          $feature.UtilType2 == 12, 'Transformer', \
+                          $feature.UtilType2 == 13, 'Truss Guy', \
+                          $feature.UtilType2 == 14, 'Concrete Pedestal', \
+                          $feature.UtilType2 == 15, 'Ground', \
+                          $feature.UtilType2 == 16, 'Down Guy', \
+                          $feature.UtilType2 == 17, 'Entry/Exit Pit', \
+                          $feature.UtilType2 == 18, 'Handhole', \
+                          $feature.UtilType2 == 19, 'Transmission Tower', \
+                          $feature.UtilType)",
+  uniqueValueInfos: [
+    {
+      value: "Telecom Pole (BTS)",
+      symbol: customSymbol3D("3D_Telecom_BTS"),
+    },
+    {
+      value: "Telecom Pole (CATV)",
+      symbol: customSymbol3D("3D_TelecomCATV_Pole"),
+    },
+    {
+      value: "Manhole",
+      symbol: utilPtSymbolStreet("Storm_Drain"),
+    },
+    {
+      value: "Electric Pole",
+      //symbol: utilPtSymbolInfra("Powerline_Pole")
+      symbol: customSymbol3D("3D_Electric_Pole"),
+    },
+    {
+      value: "Street Light",
+      symbol: utilPtSymbolStreet("Overhanging_Street_and_Sidewalk_-_Light_on"),
+    },
+    {
+      value: "Junction Box",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Coupling",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Fitting",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Transformer",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Truss Guy",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Concrete Pedestal",
+      symbol: customSymbol3D("Concrete Pedestal"),
+    },
+    {
+      value: "Ground",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Down Guy",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Entry/Exit Pit",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Handhole",
+      symbol: customSymbol3D("3D_Drain_Box"),
+    },
+    {
+      value: "Transmission Tower",
+      symbol: utilPtSymbolInfra("Powerline_Pole"),
+    },
+  ],
+  visualVariables: [
+    new SizeVariable({
+      axis: "height",
+      field: "SIZE",
+      valueUnit: "meters",
+    }),
+    new RotationVariable({
+      field: "ROTATION",
+    }),
+  ],
+});
+
+export const utilityPointLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 1,
+  title: "Point Symbol",
+  // outFields: ['*'],
+  renderer: utilPointSymbolRenderer,
+  elevationInfo: {
+    mode: "relative-to-ground", // original was "relative-to-scene"
+    featureExpressionInfo: {
+      expression: "$feature.Height",
+    },
+    unit: "meters",
+    //offset: 0
+  },
+  popupTemplate: {
+    title: "<div style='color: #eaeaea'>{comp_agency}</div>",
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "Id",
+          },
+          {
+            fieldName: "UtilType",
+            label: "Utility Type",
+          },
+          {
+            fieldName: "UtilType2",
+            label: "Utility Name",
+          },
+          {
+            fieldName: "LAYER",
+            label: "<h5>Action</h5>",
+          },
+          {
+            fieldName: "Status",
+            label: "<h5>Status</h5>",
+          },
+          {
+            fieldName: "CP",
+          },
+          {
+            fieldName: "Remarks",
+          },
+        ],
+      },
+    ],
+  },
+});
+
+const utilityStatusRenderer = new UniqueValueRenderer({
+  valueExpression:
+    // eslint-disable-next-line no-multi-str
+    "When($feature.Remarks == 'pending', 'NoAction', \
+                          $feature.Status == 1 && $feature.LAYER == 1, 'DemolishComplete',\
+                          $feature.Status == 0 && $feature.LAYER == 1, 'DemolishIncomplete',\
+                          $feature.Status == 0 && $feature.LAYER == 2, 'RelocIncomplete', \
+                          $feature.Status == 1 && $feature.LAYER == 2, 'RelocComplete', \
+                          $feature.Status == 0 && $feature.LAYER == 3, 'NewlyAdded', \
+                          $feature.Status == 1 && $feature.LAYER == 3, 'NewlyAddedComplete',$feature.Comp_Agency)",
+  uniqueValueInfos: [
+    {
+      value: "DemolishIncomplete",
+      label: "To be Demolished",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Demolished.png",
+        "#D13470",
+        20,
+      ),
+    },
+    {
+      value: "DemolishComplete",
+      label: "Demolision Completed",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/DemolishComplete_v2.png",
+        "#D13470",
+        25,
+      ),
+    },
+    {
+      value: "RelocIncomplete",
+      label: "Proposed Relocation",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Relocatd.png",
+        "#D13470",
+        30,
+      ),
+    },
+    {
+      value: "RelocComplete",
+      label: "Relocation Completed",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Utility_Relocated_Completed_Symbol.png",
+        "#D13470",
+        30,
+      ),
+    },
+    {
+      value: "NewlyAdded",
+      label: "Add New Utility",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/NewlyAdded.png",
+        "#D13470",
+        35,
+      ),
+    },
+    {
+      value: "NewlyAddedComplete",
+      label: "Newly Utility Added",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/NewlyAdded_Completed.png",
+        "#D13470",
+        35,
+      ),
+    },
+    {
+      value: "NoAction",
+      label: "Require Data Checking",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Unknown_v2.png",
+        "#D13470",
+        35,
+      ),
+    },
+  ],
+});
+
+const utilPointStatusTextSymbol = labelSymbol3DLine({
+  materialColor: "white",
+  fontSize: 10,
+  haloColor: [0, 0, 0, 0.7],
+  haloSize: 0.4,
+});
+
+const utilPointStatusLabel = new LabelClass({
+  labelPlacement: "above-center",
+  labelExpressionInfo: {
+    //value: "{Company}",
+    expression:
+      "When($feature.Status >= 0, DomainName($feature, 'Comp_Agency'), '')", //$feature.Comp_Agency
+  },
+  symbol: utilPointStatusTextSymbol,
+});
+
+export const utilityPointLayer1 = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 1,
+  title: "Point Status",
+  // outFields: ['*'],
+  renderer: utilityStatusRenderer,
+  elevationInfo: {
+    mode: "relative-to-ground", // original was "relative-to-scene"
+    featureExpressionInfo: {
+      expression: "$feature.Height",
+    },
+    unit: "meters",
+    //offset: 0
+  },
+  labelingInfo: [utilPointStatusLabel],
+  popupTemplate: {
+    title: "<div style='color: #eaeaea'>{comp_agency}</div>",
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "Id",
+          },
+          {
+            fieldName: "UtilType",
+            label: "Utility Type",
+          },
+          {
+            fieldName: "UtilType2",
+            label: "Utility Name",
+          },
+          {
+            fieldName: "LAYER",
+            label: "<h5>Action</h5>",
+          },
+          {
+            fieldName: "Status",
+            label: "<h5>Status</h5>",
+          },
+          {
+            fieldName: "CP",
+          },
+          {
+            fieldName: "Remarks",
+          },
+        ],
+      },
+    ],
+  },
+});
+
+// * Utility Line * //
+const utilLineStatusRenderer = new UniqueValueRenderer({
+  valueExpression:
+    // eslint-disable-next-line no-multi-str
+    "When($feature.Remarks == 'pending', 'NoAction', \
+                          $feature.Status == 1 && $feature.LAYER == 1, 'DemolishComplete',\
+                          $feature.Status == 0 && $feature.LAYER == 1, 'DemolishIncomplete',\
+                          $feature.Status == 0 && $feature.LAYER == 2, 'RelocIncomplete', \
+                          $feature.Status == 1 && $feature.LAYER == 2, 'RelocComplete', \
+                          $feature.Status == 0 && $feature.LAYER == 3, 'NewlyAdded', \
+                          $feature.Status == 1 && $feature.LAYER == 3, 'NewlyAddedComplete',$feature.Comp_Agency)",
+  //field: "Company",
+  uniqueValueInfos: [
+    {
+      value: "DemolishIncomplete",
+      label: "To be Demolished",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Demolished.png",
+        "#D13470",
+        20,
+      ),
+    },
+    {
+      value: "DemolishComplete",
+      label: "Demolision Completed",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/DemolishComplete_v2.png",
+        "#D13470",
+        25,
+      ),
+    },
+    {
+      value: "RelocIncomplete",
+      label: "Proposed Relocation",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Relocatd.png",
+        "#D13470",
+        30,
+      ),
+    },
+    {
+      value: "RelocComplete",
+      label: "Relocation Completed",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Utility_Relocated_Completed_Symbol.png",
+        "#D13470",
+        30,
+      ),
+    },
+    {
+      value: "NewlyAdded",
+      label: "Add New Utility",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/NewlyAdded.png",
+        "#D13470",
+        35,
+      ),
+    },
+    {
+      value: "NewlyAddedComplete",
+      label: "Newly Utility Added",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/NewlyAdded_Completed.png",
+        "#D13470",
+        35,
+      ),
+    },
+    {
+      value: "NoAction",
+      label: "Require Data Checking",
+      symbol: getUniqueValueSymbol(
+        "https://EijiGorilla.github.io/Symbols/Unknown_v2.png",
+        "#D13470",
+        35,
+      ),
+    },
+  ],
+});
+
+export const utilityLineLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 2,
+  title: "Line Symbol", // Relocation PLan?
+  elevationInfo: {
+    mode: "relative-to-ground", // original was "relative-to-scene"
+    featureExpressionInfo: {
+      expression: "$feature.height",
+    },
+    unit: "meters",
+    //offset: 0
+  },
+  // outFields: ['*'],
+  popupTemplate: {
+    title: "<div style='color: #eaeaea'>{comp_agency}</div>",
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "Id",
+          },
+          {
+            fieldName: "UtilType",
+            label: "Utility Type",
+          },
+          {
+            fieldName: "UtilType2",
+            label: "Utility Name",
+          },
+          {
+            fieldName: "LAYER",
+            label: "<h5>Action</h5>",
+          },
+          {
+            fieldName: "Status",
+            label: "<h5>Status</h5>",
+          },
+          {
+            fieldName: "CP",
+          },
+          {
+            fieldName: "Remarks",
+          },
+        ],
+      },
+    ],
+  },
+});
+
+function lineSizeShapeSymbolLayers(
+  profile: "circle" | "quad" | undefined,
+  cap: "round" | "none" | "butt" | "square" | undefined,
+  join: "round" | "miter" | "bevel" | undefined,
+  width: number,
+  height: number,
+  profileRotation: "heading" | "all" | undefined,
+  property: number,
+) {
+  return new LineSymbol3D({
+    symbolLayers: [
+      new PathSymbol3DLayer({
+        profile: profile,
+        material: {
+          color: utilLineColor[property],
+        },
+        width: width,
+        height: height,
+        join: join,
+        cap: cap,
+        anchor: "bottom",
+        profileRotation: profileRotation,
+      }),
+    ],
+  });
+}
+
+function renderutilityLineLayer() {
+  const renderer = new UniqueValueRenderer({
+    field: "utiltype2",
+  });
+
+  for (let i = 1; i <= utilLineColor.length; i++) {
+    renderer.addUniqueValueInfo({
+      value: i,
+      symbol: lineSizeShapeSymbolLayers(
+        "circle",
+        "none",
+        "miter",
+        0.5,
+        0.5,
+        "all",
+        i - 1,
+      ),
+    });
+  }
+  utilityLineLayer.renderer = renderer;
+}
+
+renderutilityLineLayer();
+
+const utilLineStatusTextSymbol = labelSymbol3DLine({
+  materialColor: "black",
+  fontSize: 10,
+  haloColor: [255, 255, 255, 0.7],
+  haloSize: 0.7,
+});
+
+const utilityLineLabelClass = new LabelClass({
+  //labelPlacement: 'above-center', // Polyline has not choice
+  labelExpressionInfo: {
+    expression:
+      "When($feature.Status >= 0, DomainName($feature, 'Comp_Agency'), '')",
+  },
+  symbol: utilLineStatusTextSymbol,
+});
+
+export const utilityLineLayer1 = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 2,
+  title: "Line Status",
+  elevationInfo: {
+    mode: "relative-to-ground", // original was "relative-to-scene"
+    featureExpressionInfo: {
+      expression: "$feature.height",
+    },
+    unit: "meters",
+    //offset: 0
+  },
+  // outFields: ['*'],
+  renderer: utilLineStatusRenderer,
+  labelingInfo: [utilityLineLabelClass],
+  popupTemplate: {
+    title: "<div style='color: #eaeaea'>{comp_agency}</div>",
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "Id",
+          },
+          {
+            fieldName: "UtilType",
+            label: "Utility Type",
+          },
+          {
+            fieldName: "UtilType2",
+            label: "Utility Name",
+          },
+          {
+            fieldName: "LAYER",
+            label: "<h5>Action</h5>",
+          },
+          {
+            fieldName: "Status",
+            label: "<h5>Status</h5>",
+          },
+          {
+            fieldName: "CP",
+          },
+          {
+            fieldName: "Remarks",
+          },
+        ],
+      },
+    ],
+  },
+});
+export const utilityGroupLayer = new GroupLayer({
+  title: "Utility Relocation",
+  visible: false,
+  visibilityMode: "independent",
+  layers: [
+    utilityLineLayer1,
+    utilityLineLayer,
+    utilityPointLayer1,
+    utilityPointLayer,
+  ],
+});
+
+//---------------------------------------------//
+//                   Viaduct                   //
+//---------------------------------------------//
+import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D.js";
+import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer.js";
+
+const viaduct_renderer = new UniqueValueRenderer({
+  field: "Status",
+  uniqueValueInfos: [
+    {
+      value: 1,
+      label: "To be Constructed",
+      symbol: new MeshSymbol3D({
+        symbolLayers: [
+          new FillSymbol3DLayer({
+            material: {
+              color: [225, 225, 225, 0.1],
+              colorMixMode: "replace",
+            },
+            edges: new SolidEdges3D({
+              color: [225, 225, 225, 0.3],
+            }),
+          }),
+        ],
+      }),
+    },
+    {
+      value: 2,
+      label: "Under Construction",
+      symbol: new MeshSymbol3D({
+        symbolLayers: [
+          new FillSymbol3DLayer({
+            material: {
+              color: [211, 211, 211, 0.5],
+              colorMixMode: "replace",
+            },
+            edges: new SolidEdges3D({
+              color: [225, 225, 225, 0.3],
+            }),
+          }),
+        ],
+      }),
+    },
+    {
+      value: 4,
+      label: "Completed",
+      symbol: new MeshSymbol3D({
+        symbolLayers: [
+          new FillSymbol3DLayer({
+            material: {
+              color: [0, 112, 255, 0.8],
+              colorMixMode: "replace",
+            },
+            edges: new SolidEdges3D({
+              color: [225, 225, 225, 0.3],
+            }),
+          }),
+        ],
+      }),
+    },
+  ],
+});
+
+export const viaductLayer = new SceneLayer({
+  portalItem: {
+    id: "1f89733a04b443e2a1e0e5e6dfd493e3",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "absolute-height", //absolute-height, relative-to-ground
+  },
+  title: "Viaduct",
+  labelsVisible: false,
+  renderer: viaduct_renderer,
+  popupTemplate: {
+    title: "<div style='color: #eaeaea'>{PierNumber}</div>",
+    lastEditInfoEnabled: false,
+    returnGeometry: true,
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "Type",
+            label: "Type",
+          },
+          {
+            fieldName: "CP",
+          },
+          {
+            // this gives error.. WHY?
+            fieldName: "start_actual",
+            label: "Construction started",
+          },
+          {
+            fieldName: "uniqueID",
+          },
+        ],
+      },
+    ],
+  },
 });

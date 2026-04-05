@@ -67,6 +67,7 @@ const TreeCuttingChart = () => {
       layer: treeCuttingLayer,
       statusstate: [1, 2, 3, 4],
       statusList: statusTreeCuttingChart,
+      statusField: "Status",
     }).then((result: any) => {
       setTreeData(result[0]);
       setTreesNumber(result[1]);

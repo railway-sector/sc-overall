@@ -21,6 +21,8 @@ import {
   handedOverLotLayer,
   pierAccessLayer,
   treeGroupLayer,
+  utilityGroupLayer,
+  viaductLayer,
 } from "../layers";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
 
@@ -29,7 +31,9 @@ export default function MapDisplay() {
   const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
 
   arcgisScene?.viewOnReady(() => {
+    arcgisScene?.map?.add(viaductLayer);
     arcgisScene?.map?.add(pierAccessLayer);
+    arcgisScene?.map?.add(utilityGroupLayer);
     arcgisScene?.map?.add(treeGroupLayer);
     arcgisScene?.map?.add(lotGroupLayer);
     arcgisScene?.map?.add(ngcp7_groupLayer);
@@ -76,8 +80,13 @@ export default function MapDisplay() {
     arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
     arcgisSearch.includeDefaultSourcesDisabled = true;
     arcgisSearch.locationDisabled = true;
-    arcgisScene.hideAttribution = true;
     arcgisSearch?.sources.push(...sources);
+    arcgisScene.hideAttribution = true;
+    arcgisScene.view.environment.atmosphereEnabled = false;
+    arcgisScene.view.environment.starsEnabled = false;
+    if (arcgisScene?.map?.ground) {
+      arcgisScene.map.ground.navigationConstraint = { type: "none" };
+    }
   });
 
   return (

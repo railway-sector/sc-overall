@@ -42,6 +42,7 @@ const TreeCompensationChart = () => {
       layer: treeCompensationLayer,
       statusstate: [1, 2, 3, 4],
       statusList: statusTreeCompensationChart,
+      statusField: "Compensation",
     }).then((result: any) => {
       setTreeData(result[0]);
     });
