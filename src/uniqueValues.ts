@@ -180,22 +180,6 @@ export const structureStatusQuery = structureStatusLabel.map(
 // Permit to Enter for structure
 export const structurePteField = "PTE";
 
-// Structure MOA
-export const structureMoaField = "MoA";
-export const structureMoaStatus = [
-  "For Negotiation",
-  "Expropriation",
-  "Donation",
-  "No Need to Acquire",
-];
-
-export const structureMoaQuery = structureMoaStatus.map((status, index) => {
-  return Object.assign({
-    category: status,
-    value: index + 1,
-  });
-});
-
 // NLO
 export const nloStatusField = "StatusRC";
 export const nloStatusLabel = [
@@ -311,7 +295,7 @@ export const statusTreeCuttingChart = [
 //--- Tree Compensation ---//
 export const treeCompen_status_field = "Compensation";
 export const colorsCompen = ["#0070ff", "#ffff00", "#71ab48"];
-const statusTreeCompensation: string[] = [
+export const statusTreeCompensation: string[] = [
   "Non-Compensable",
   "For Processing",
   "Compensated",

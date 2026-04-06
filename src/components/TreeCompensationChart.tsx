@@ -4,8 +4,10 @@ import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { pieChartDataQueryFeature, chartRenderer } from "../Query";
+import { chartRenderer, pieChartStatusData } from "../Query";
 import {
+  colorsCompen,
+  statusTreeCompensation,
   statusTreeCompensationChart,
   treeCompen_status_field,
 } from "../uniqueValues";
@@ -37,12 +39,12 @@ const TreeCompensationChart = () => {
   const chartid = "pie-compen";
 
   useEffect(() => {
-    pieChartDataQueryFeature({
+    pieChartStatusData({
       contractcp: contractpackages,
       layer: treeCompensationLayer,
-      statusstate: [1, 2, 3, 4],
-      statusList: statusTreeCompensationChart,
-      statusField: "Compensation",
+      statusList: statusTreeCompensation,
+      statusColor: colorsCompen,
+      statusField: treeCompen_status_field,
     }).then((result: any) => {
       setTreeData(result[0]);
     });

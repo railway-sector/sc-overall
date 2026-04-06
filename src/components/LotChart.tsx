@@ -7,22 +7,26 @@ import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   chartRenderer,
   dateUpdate,
-  generateHandedOverArea,
-  generateHandedOverLotsNumber,
-  generateLotData,
-  generateLotNumber,
-  generateTotalAffectedArea,
   queryDefinitionExpression,
   thousands_separators,
   queryExpression,
   zoomToLayer,
+  pieChartStatusData,
+  totalFieldCount,
+  totalFieldSum,
 } from "../Query";
 import "@esri/calcite-components/dist/components/calcite-segmented-control";
 import "@esri/calcite-components/dist/components/calcite-segmented-control-item";
 import "@esri/calcite-components/dist/components/calcite-checkbox";
 import {
+  affectedAreaField,
   cutoff_days,
+  lotHandedOverAreaField,
+  lotHandedOverField,
+  lotIdField,
+  lotStatusColor,
   lotStatusField,
+  lotStatusLabel,
   lotStatusQuery,
   primaryLabelColor,
   updatedDateCategoryNames,
@@ -85,14 +89,15 @@ const LotChart = () => {
   // Define chart id
   const chartID = "pie-two";
 
-  const [lotNumber, setLotNumber] = useState([]);
+  const [lotNumber, setLotNumber] = useState<number>(0);
   const [totalAffectedArea, setTotalAffectedArea] = useState<
     number | undefined
   >();
 
   // Handed Over
-  const [handedOverNumber, setHandedOverNumber] = useState<any>([]);
-  const [handedOverArea, setHandedOverArea] = useState<any>();
+  const [handedOverNumber, setHandedOverNumber] = useState<number>(0);
+  const [handedOverPercent, setHandedOverPercent] = useState<number>(0);
+  const [handedOverArea, setHandedOverArea] = useState<number>(0);
   const [handedOverCheckBox, setHandedOverCheckBox] = useState<any>(false);
 
   useEffect(() => {
@@ -103,6 +108,12 @@ const LotChart = () => {
     }
   }, [handedOverCheckBox]);
 
+  useEffect(() => {
+    setHandedOverPercent(
+      Number(((handedOverNumber / lotNumber) * 100).toFixed(0)),
+    );
+  }, [handedOverNumber, lotNumber]);
+
   // Chart data and calculate statistics
   useEffect(() => {
     queryDefinitionExpression({
@@ -112,27 +123,51 @@ const LotChart = () => {
       featureLayer: [lotLayer, handedOverLotLayer],
     });
 
-    generateLotData(contractpackages).then((result) => {
-      setLotData(result);
+    //--- chart data
+    pieChartStatusData({
+      contractcp: contractpackages,
+      layer: lotLayer,
+      statusList: lotStatusLabel,
+      statusColor: lotStatusColor,
+      statusField: lotStatusField,
+    }).then((result: any) => {
+      setLotData(result[0]);
     });
 
-    // Lot number
-    generateLotNumber(contractpackages).then((response: any) => {
-      setLotNumber(response);
+    //--- total number of lots (public + private)
+    totalFieldCount({
+      contractcp: contractpackages,
+      layer: lotLayer,
+      idField: lotIdField,
+    }).then((result: any) => {
+      setLotNumber(result);
     });
 
-    // total affected area for
-    generateTotalAffectedArea(contractpackages).then((response: any) => {
-      setTotalAffectedArea(response);
+    //-- Total affected area
+    totalFieldSum({
+      contractcp: contractpackages,
+      layer: lotLayer,
+      valueSumField: affectedAreaField,
+    }).then((result: any) => {
+      setTotalAffectedArea(result);
     });
 
-    // Handed Over
-    generateHandedOverLotsNumber(contractpackages).then((response: any) => {
-      setHandedOverNumber(response);
+    //--- Total handed-over area
+    totalFieldSum({
+      contractcp: contractpackages,
+      layer: lotLayer,
+      valueSumField: lotHandedOverAreaField,
+    }).then((result: any) => {
+      setHandedOverArea(result);
     });
 
-    generateHandedOverArea(contractpackages).then((response) => {
-      setHandedOverArea(response);
+    //--- Total handed-over lots
+    totalFieldSum({
+      contractcp: contractpackages,
+      layer: lotLayer,
+      valueSumField: lotHandedOverField,
+    }).then((result: any) => {
+      setHandedOverNumber(result);
     });
 
     zoomToLayer(lotLayer, arcgisScene);
@@ -249,7 +284,7 @@ const LotChart = () => {
               margin: "auto",
             }}
           >
-            {thousands_separators(lotNumber[0])}
+            {thousands_separators(lotNumber)}
           </dd>
         </dl>
         <dl style={{ alignItems: "center" }}>
@@ -352,7 +387,7 @@ const LotChart = () => {
               margin: "auto",
             }}
           >
-            {handedOverNumber[0]}% ({thousands_separators(handedOverNumber[1])})
+            {handedOverPercent}% ({thousands_separators(handedOverNumber)})
           </dd>
         </dl>
         <dl style={{ alignItems: "center" }}>

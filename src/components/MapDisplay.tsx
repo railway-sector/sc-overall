@@ -23,12 +23,25 @@ import {
   treeGroupLayer,
   utilityGroupLayer,
   viaductLayer,
+  pierHeadColumnLayer,
 } from "../layers";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 
 export default function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
+
+  reactiveUtils.watch(
+    () => viaductLayer.visible,
+    (visible) => {
+      if (visible) {
+        pierHeadColumnLayer.visible = false;
+      } else {
+        pierHeadColumnLayer.visible = true;
+      }
+    },
+  );
 
   arcgisScene?.viewOnReady(() => {
     arcgisScene?.map?.add(viaductLayer);
@@ -86,6 +99,7 @@ export default function MapDisplay() {
     arcgisScene.view.environment.starsEnabled = false;
     if (arcgisScene?.map?.ground) {
       arcgisScene.map.ground.navigationConstraint = { type: "none" };
+      arcgisScene.map.ground.opacity = 0.7;
     }
   });
 

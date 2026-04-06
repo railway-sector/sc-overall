@@ -7,32 +7,16 @@ import type { LayerNameType } from "./uniqueValues";
 import {
   dateTable,
   lotLayer,
-  nloLayer,
-  structureLayer,
   utilityLineLayer,
   utilityPointLayer,
 } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import * as am5 from "@amcharts/amcharts5";
 import {
-  nloStatusLabel,
-  nloStatusQuery,
-  lotStatusLabel,
-  lotStatusQuery,
-  nloStatusField,
-  structurePteField,
-  structureStatusField,
-  structureStatusLabel,
-  structureStatusQuery,
   lotHandedOverAreaField,
   handedOverLotField,
-  municipalityField,
-  barangayField,
-  lotIdField,
   affectedAreaField,
   cpField,
-  lotStatusField,
-  lotHandedOverField,
   utilityTypes,
 } from "./uniqueValues";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
@@ -630,6 +614,9 @@ export function queryExpression({
   return expression;
 }
 
+//---------------------------------------------------------//
+//    Definition Expression using queryExpression          //
+//---------------------------------------------------------//
 interface queryDefinitionExpressionType {
   queryExpression?: string;
   featureLayer?:
@@ -654,6 +641,127 @@ export function queryDefinitionExpression({
       }
     }
   }
+}
+
+//---------------------------------------------//
+//           Pie Chart Data Generation         //
+//---------------------------------------------//
+interface pieChartStatusDataType {
+  contractcp: string;
+  layer: any;
+  statusList?: any;
+  statusColor?: any;
+  statusField?: any;
+  idField?: any;
+  valueSumField?: any;
+  queryField?: any;
+}
+export async function pieChartStatusData({
+  contractcp,
+  layer,
+  statusList,
+  statusColor,
+  statusField,
+}: pieChartStatusDataType) {
+  //--- Main statistics
+  const statsCollect = new StatisticDefinition({
+    onStatisticField: statusField,
+    outStatisticFieldName: "statsCollect",
+    statisticType: "count",
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+
+  const expression = queryExpression({
+    contractcp: contractcp,
+  });
+  query.where = expression;
+  queryDefinitionExpression({
+    queryExpression: expression,
+    featureLayer: [layer],
+  });
+  query.orderByFields = [statusField];
+  query.groupByFieldsForStatistics = [statusField];
+
+  //--- Query features using statistics definitions
+  let total_count = 0;
+  return layer?.queryFeatures(query).then(async (response: any) => {
+    const stats = response.features;
+    const data = stats.map((result: any) => {
+      const attributes = result.attributes;
+      total_count += attributes.statsCollect;
+      return Object.assign({
+        category: statusList[attributes[statusField] - 1],
+        value: attributes.statsCollect,
+      });
+    });
+
+    //--- Account for zero count
+    const data0 = statusList.map((status: any, index: any) => {
+      const find = data.find((emp: any) => emp.category === status);
+      const value = find === undefined ? 0 : find?.value;
+      return Object.assign({
+        category: status,
+        value: value,
+        sliceSettings: {
+          fill: am5.color(statusColor[index]),
+        },
+      });
+    });
+    return [data0, total_count];
+  });
+}
+
+export async function totalFieldCount({
+  contractcp,
+  layer,
+  idField,
+  queryField,
+}: pieChartStatusDataType) {
+  const statsCollect = new StatisticDefinition({
+    onStatisticField: idField,
+    outStatisticFieldName: "statsCollect",
+    statisticType: "count",
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+  query.where = queryExpression({
+    contractcp: contractcp,
+    queryField: queryField,
+  });
+
+  return layer?.queryFeatures(query).then((response: any) => {
+    return response.features[0].attributes.statsCollect;
+  });
+}
+
+export async function totalFieldSum({
+  contractcp,
+  layer,
+  valueSumField,
+  queryField,
+}: pieChartStatusDataType) {
+  const statsCollect = new StatisticDefinition({
+    onStatisticField: valueSumField,
+    outStatisticFieldName: "statsCollect",
+    statisticType: "sum",
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+  query.where = queryExpression({
+    contractcp: contractcp,
+    queryField: queryField,
+  });
+
+  return layer?.queryFeatures(query).then((response: any) => {
+    return response.features[0].attributes.statsCollect;
+  });
 }
 
 //--------------------------------//
@@ -703,155 +811,6 @@ export async function dateUpdate(category: any) {
 //---------------------------------------------//
 //           Land, Structure, NLO              //
 //---------------------------------------------//
-export async function generateLotData(contractcp: any) {
-  const total_count = new StatisticDefinition({
-    onStatisticField: lotStatusField,
-    outStatisticFieldName: "total_count",
-    statisticType: "count",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outFields = [lotStatusField];
-  query.outStatistics = [total_count];
-  query.orderByFields = [lotStatusField];
-  query.groupByFieldsForStatistics = [lotStatusField];
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const status_id = attributes[lotStatusField];
-      const count = attributes.total_count;
-      return Object.assign({
-        category: lotStatusLabel[status_id - 1],
-        value: count,
-      });
-    });
-
-    const data1: any = [];
-    lotStatusLabel.map((status: any, index: any) => {
-      const find = data.find((emp: any) => emp.category === status);
-      const value = find === undefined ? 0 : find?.value;
-      const object = {
-        category: status,
-        value: value,
-        sliceSettings: {
-          fill: am5.color(lotStatusQuery[index].color),
-        },
-      };
-      data1.push(object);
-    });
-
-    return data1;
-  });
-}
-
-export async function generateLotNumber(contractcp: any) {
-  const total_lot_number = new StatisticDefinition({
-    onStatisticField: lotIdField,
-    outStatisticFieldName: "total_lot_number",
-    statisticType: "count",
-  });
-
-  const total_lot_pie = new StatisticDefinition({
-    onStatisticField: lotHandedOverField,
-    outStatisticFieldName: "total_lot_pie",
-    statisticType: "sum",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outFields = [lotIdField, lotHandedOverField];
-  query.outStatistics = [total_lot_number, total_lot_pie];
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const totalLotNumber = stats.total_lot_number;
-    const totalLotPie = stats.total_lot_pie;
-    return [totalLotNumber, totalLotPie];
-  });
-}
-
-export async function generateTotalAffectedArea(contractcp: any) {
-  // const queryField = `${affectedAreafield} IS NOT NULL`;
-  const total_affected_area = new StatisticDefinition({
-    onStatisticField: affectedAreaField,
-    outStatisticFieldName: "total_affected_area",
-    statisticType: "sum",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outFields = [affectedAreaField];
-  query.outStatistics = [total_affected_area];
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const value = stats.total_affected_area;
-    return value;
-  });
-}
-
-// Handed Over
-export async function generateHandedOverLotsNumber(contractcp: any) {
-  const total_handedover_lot = new StatisticDefinition({
-    onStatisticField: lotHandedOverField,
-    outStatisticFieldName: "total_handedover_lot",
-    statisticType: "sum",
-  });
-
-  const total_lot_N = new StatisticDefinition({
-    onStatisticField: lotIdField,
-    outStatisticFieldName: "total_lot_N",
-    statisticType: "count",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outStatistics = [total_handedover_lot, total_lot_N];
-  query.outFields = [lotIdField, lotHandedOverField];
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const handedover = stats.total_handedover_lot;
-    const totaln = stats.total_lot_N;
-    const percent = ((handedover / totaln) * 100).toFixed(0);
-
-    return [percent, handedover];
-  });
-}
-
-export async function generateHandedOverArea(contractcp: any) {
-  //--- If returns error, check the field type is 'double' not string.
-  const handed_over_area = new StatisticDefinition({
-    onStatisticField: lotHandedOverAreaField,
-    outStatisticFieldName: "handed_over_area",
-    statisticType: "sum",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outStatistics = [handed_over_area];
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  return lotLayer?.queryFeatures(query).then((response: any) => {
-    if (response.features.length > 0) {
-      const stats = response?.features[0]?.attributes;
-      const value = stats.handed_over_area;
-      return value;
-    }
-  });
-}
 
 export async function generateHandedOverAreaData() {
   const total_affected_area = new StatisticDefinition({
@@ -892,158 +851,6 @@ export async function generateHandedOverAreaData() {
     });
 
     return data;
-  });
-}
-
-// Structure
-export async function generateStructureData(contractcp: any) {
-  const total_count = new StatisticDefinition({
-    onStatisticField: structureStatusField,
-    outStatisticFieldName: "total_count",
-    statisticType: "count",
-  });
-
-  const query = structureLayer.createQuery();
-  query.outFields = [structureStatusField, municipalityField, barangayField];
-  query.outStatistics = [total_count];
-  query.orderByFields = [structureStatusField];
-  query.groupByFieldsForStatistics = [structureStatusField];
-
-  query.where = queryExpression({
-    contractcp: contractcp,
-    queryField: undefined,
-  });
-
-  return structureLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const status_id = attributes.StatusStruc;
-      const count = attributes.total_count;
-      return Object.assign({
-        category: structureStatusLabel[status_id - 1],
-        value: count,
-      });
-    });
-
-    const data1: any = [];
-    structureStatusLabel.map((status: any, index: any) => {
-      const find = data.find((emp: any) => emp.category === status);
-      const value = find === undefined ? 0 : find?.value;
-      const object = {
-        category: status,
-        value: value,
-        sliceSettings: {
-          fill: am5.color(structureStatusQuery[index].color),
-        },
-      };
-      data1.push(object);
-    });
-    return data1;
-  });
-}
-
-// For Permit-to-Enter
-export async function generateStrucNumber(contractcp: any) {
-  const onStatisticsFieldValue: string =
-    "CASE WHEN " + structureStatusField + " >= 1 THEN 1 ELSE 0 END";
-
-  const onStatisticFieldValuePte: string =
-    "CASE WHEN " + structurePteField + " = 1 THEN 1 ELSE 0 END";
-
-  const total_pte_structure = new StatisticDefinition({
-    onStatisticField: onStatisticFieldValuePte,
-    outStatisticFieldName: "total_pte_structure",
-    statisticType: "sum",
-  });
-
-  const total_struc_N = new StatisticDefinition({
-    onStatisticField: onStatisticsFieldValue,
-    outStatisticFieldName: "total_struc_N",
-    statisticType: "sum",
-  });
-
-  const query = structureLayer.createQuery();
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  query.outStatistics = [total_pte_structure, total_struc_N];
-  return structureLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const pte = stats.total_pte_structure;
-    const totaln = stats.total_struc_N;
-    const percPTE = Number(((pte / totaln) * 100).toFixed(0));
-    return [percPTE, pte, totaln];
-  });
-}
-
-// Non-Land Owner
-export async function generateNloData(contractcp: any) {
-  const total_count = new StatisticDefinition({
-    onStatisticField: nloStatusField,
-    outStatisticFieldName: "total_count",
-    statisticType: "count",
-  });
-
-  const query = nloLayer.createQuery();
-  query.outFields = [nloStatusField, municipalityField, barangayField];
-  query.outStatistics = [total_count];
-  query.orderByFields = [nloStatusField];
-  query.groupByFieldsForStatistics = [nloStatusField];
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  return nloLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const status_id = attributes.StatusRC;
-      const count = attributes.total_count;
-      return Object.assign({
-        category: nloStatusLabel[status_id - 1],
-        value: count,
-      });
-    });
-
-    const data1: any = [];
-    nloStatusLabel.map((status: any, index: any) => {
-      const find = data.find((emp: any) => emp.category === status);
-      const value = find === undefined ? 0 : find?.value;
-      const object = {
-        category: status,
-        value: value,
-        sliceSettings: {
-          fill: am5.color(nloStatusQuery[index].color),
-        },
-      };
-      data1.push(object);
-    });
-    return data1;
-  });
-}
-
-export async function generateNloNumber(contractcp: any) {
-  const onStatisticsFieldValue: string =
-    "CASE WHEN " + nloStatusField + " >= 1 THEN 1 ELSE 0 END";
-
-  const total_lbp = new StatisticDefinition({
-    onStatisticField: onStatisticsFieldValue,
-    outStatisticFieldName: "total_lbp",
-    statisticType: "sum",
-  });
-  const query = nloLayer.createQuery();
-  query.where = queryExpression({
-    contractcp: contractcp,
-  });
-
-  query.outStatistics = [total_lbp];
-  return nloLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const totalnlo = stats.total_lbp;
-
-    return totalnlo;
   });
 }
 
@@ -1110,66 +917,6 @@ export function highlightHandedOverLot(layer: any, view: any) {
       highlight = urgentLayerView.highlight(objID);
     });
   });
-}
-
-//---------------------------------------------//
-//           Tree Cutting & Compensation       //
-//---------------------------------------------//
-interface chartDataGeneratorType {
-  contractcp: string;
-  layer: any;
-  statusstate?: any;
-  statusList?: any;
-  statusField: any;
-}
-
-export async function pieChartDataQueryFeature({
-  contractcp,
-  layer,
-  statusstate, // [1, 2, 3, 4]
-  statusList,
-  statusField,
-}: chartDataGeneratorType) {
-  //--- Main statistics
-  const compile = statusstate.map((statusValue: any) => {
-    return new StatisticDefinition({
-      onStatisticField: `CASE WHEN ${statusField} = ${statusValue} THEN 1 ELSE 0 END`,
-      outStatisticFieldName: `statistics${statusValue}`,
-      statisticType: "sum",
-    });
-  });
-
-  //--- Query
-  const query = new Query();
-  query.outStatistics = compile;
-
-  const expression = queryExpression({
-    contractcp: contractcp,
-  });
-  query.where = expression;
-  queryDefinitionExpression({
-    queryExpression: expression,
-    featureLayer: [layer],
-  });
-
-  //--- Query features using statistics definitions
-  let total_count = 0;
-  const totalStats = layer?.queryFeatures(query).then(async (response: any) => {
-    const stats = response.features[0].attributes;
-    return statusList.map((status: any, index: any) => {
-      total_count += Number(stats[compile[index].outStatisticFieldName]);
-
-      return Object.assign({
-        category: status.category,
-        value: stats[compile[index].outStatisticFieldName],
-        sliceSettings: {
-          fill: am5.color(status.color),
-        },
-      });
-    });
-  });
-  const data = await totalStats;
-  return [data, total_count];
 }
 
 //---------------------------------------------//

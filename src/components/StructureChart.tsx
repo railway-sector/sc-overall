@@ -6,11 +6,11 @@ import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   chartRenderer,
   dateUpdate,
-  generateStrucNumber,
-  generateStructureData,
+  pieChartStatusData,
   queryDefinitionExpression,
   queryExpression,
   thousands_separators,
+  // totalFieldCount,
 } from "../Query";
 import "../index.css";
 import {
@@ -20,6 +20,9 @@ import {
   structureStatusField,
   updatedDateCategoryNames,
   valueLabelColor,
+  structureStatusLabel,
+  structureStatusColorHex,
+  // structurePteField,
 } from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
@@ -33,8 +36,6 @@ function maybeDisposeRoot(divId: any) {
     }
   });
 }
-
-///*** Others */
 
 /// Draw chart
 const StructureChart = () => {
@@ -69,7 +70,13 @@ const StructureChart = () => {
   const [structureData, setStructureData] = useState<any>([]);
 
   const chartID = "structure-chart";
-  const [structureNumber, setStructureNumber] = useState([]);
+  const [structureNumber, setStructureNumber] = useState<number>(0);
+  // const [pteNumber, setPteNumber] = useState<number>(0);
+  // const [ptePercent, setPtePercent] = useState<number>(0);
+
+  // useEffect(() => {
+  //   setPtePercent(Number(((pteNumber / structureNumber) * 100).toFixed(0)));
+  // }, [structureData, structureNumber]);
 
   useEffect(() => {
     queryDefinitionExpression({
@@ -77,26 +84,37 @@ const StructureChart = () => {
       featureLayer: [structureLayer, occupancyLayer],
     });
 
-    generateStructureData(contractpackages).then((result: any) => {
-      setStructureData(result);
+    //--- chart data
+    pieChartStatusData({
+      contractcp: contractpackages,
+      layer: structureLayer,
+      statusList: structureStatusLabel,
+      statusColor: structureStatusColorHex,
+      statusField: structureStatusField,
+    }).then((result: any) => {
+      setStructureData(result[0]);
+      setStructureNumber(result[1]);
     });
 
-    // Structure Number
-    generateStrucNumber(contractpackages).then((response: any) => {
-      setStructureNumber(response);
-    });
+    //--- total number of pte
+    // totalFieldCount({
+    //   contractcp: contractpackages,
+    //   layer: structureLayer,
+    //   idField: structurePteField,
+    //   queryField: `${structurePteField} = 1`,
+    // }).then((result: any) => {
+    //   setPteNumber(result);
+    // });
   }, [contractpackages]);
 
   useEffect(() => {
-    // Dispose previously created root element
     maybeDisposeRoot(chartID);
 
     const root = am5.Root.new(chartID);
     root.container.children.clear();
     root._logo?.dispose();
 
-    // Set themesf
-    // https://www.amcharts.com/docs/v5/concepts/themes/
+    // Set themes
     root.setThemes([
       am5themes_Animated.new(root),
       am5themes_Responsive.new(root),
@@ -201,7 +219,7 @@ const StructureChart = () => {
               margin: "auto",
             }}
           >
-            {thousands_separators(structureNumber[2])}
+            {thousands_separators(structureNumber)}
           </dd>
         </dl>
       </div>
@@ -257,12 +275,12 @@ const StructureChart = () => {
               margin: "auto",
             }}
           >
-            {structureNumber[1] === 0 ? (
-              <span>{structureNumber[0]}% (0)</span>
+            {pteNumber === 0 ? (
+              <span>{ptePercent}% (0)</span>
             ) : (
               <span>
-                {structureNumber[0]}% (
-                {thousands_separators(structureNumber[1])})
+                {ptePercent}% (
+                {thousands_separators(pteNumber)})
               </span>
             )}
           </dd>

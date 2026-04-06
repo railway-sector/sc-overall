@@ -7,8 +7,7 @@ import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   chartRenderer,
   dateUpdate,
-  generateNloData,
-  generateNloNumber,
+  pieChartStatusData,
   queryDefinitionExpression,
   queryExpression,
   thousands_separators,
@@ -20,6 +19,8 @@ import {
   nloStatusQuery,
   updatedDateCategoryNames,
   valueLabelColor,
+  nloStatusLabel,
+  nloStatusColor,
 } from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
@@ -72,7 +73,7 @@ const NloChart = memo(() => {
     },
   ]);
   // NLO
-  const [nloNumber, setNloNumber] = useState(0);
+  const [nloNumber, setNloNumber] = useState<Number>(0);
   const chartID = "nlo-chart";
 
   useEffect(() => {
@@ -83,14 +84,27 @@ const NloChart = memo(() => {
       featureLayer: [nloLayer],
     });
 
-    generateNloData(contractpackages).then((result: any) => {
-      SetNloData(result);
+    //--- chart data
+    pieChartStatusData({
+      contractcp: contractpackages,
+      layer: nloLayer,
+      statusList: nloStatusLabel,
+      statusColor: nloStatusColor,
+      statusField: nloStatusField,
+    }).then((result: any) => {
+      SetNloData(result[0]);
+      setNloNumber(result[1]);
     });
 
-    // NLO
-    generateNloNumber(contractpackages).then((response: any) => {
-      setNloNumber(response);
-    });
+    //--- total number of structures
+    // totalFieldCount({
+    //   contractcp: contractpackages,
+    //   layer: nloLayer,
+    //   idField: nloStatusField,
+    //   queryField: `${nloStatusField} >= 1`,
+    // }).then((result: any) => {
+    //   setNloNumber(result);
+    // });
   }, [contractpackages]);
 
   useEffect(() => {

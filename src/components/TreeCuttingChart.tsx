@@ -7,12 +7,15 @@ import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   thousands_separators,
   dateUpdate,
-  pieChartDataQueryFeature,
+  // pieChartDataQueryFeature,
   chartRenderer,
+  pieChartStatusData,
 } from "../Query";
 import {
+  colorsCutting,
   cutoff_days,
   primaryLabelColor,
+  statusTreeCutting,
   statusTreeCuttingChart,
   treeStatus_field,
   updatedDateCategoryNames,
@@ -59,15 +62,15 @@ const TreeCuttingChart = () => {
   const chartRef = useRef<unknown | any | undefined>({});
   const [treeData, setTreeData] = useState([]);
   const chartID_cuting = "pie-cut";
-  const [treesNumber, setTreesNumber] = useState<Number>();
+  const [treesNumber, setTreesNumber] = useState<Number>(0);
 
   useEffect(() => {
-    pieChartDataQueryFeature({
+    pieChartStatusData({
       contractcp: contractpackages,
       layer: treeCuttingLayer,
-      statusstate: [1, 2, 3, 4],
-      statusList: statusTreeCuttingChart,
-      statusField: "Status",
+      statusList: statusTreeCutting,
+      statusColor: colorsCutting,
+      statusField: treeStatus_field,
     }).then((result: any) => {
       setTreeData(result[0]);
       setTreesNumber(result[1]);
