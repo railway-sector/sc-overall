@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useEffect, useRef, useState, use } from "react";
-import { viaductLayer } from "../layers";
+import { pierAccessLayer, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -50,7 +50,7 @@ const ViaductChart = () => {
       queryExpression: queryExpression({
         contractcp: contractpackages,
       }),
-      featureLayer: [viaductLayer],
+      featureLayer: [pierAccessLayer, viaductLayer],
     });
 
     chartDataColumnSries({
@@ -62,6 +62,7 @@ const ViaductChart = () => {
       statusField: status_field,
       layerName: "viaduct",
     }).then((result: any) => {
+      console.log(result[0]);
       setChartData(result[0]);
       setProgress(result[3]);
     });
