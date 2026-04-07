@@ -327,11 +327,19 @@ export const statusTreeCompensationChart = [
 export const utility_statusField = "Status";
 export const utility_typeField = "UtilType";
 export const utilityTypes = ["Telecom", "Water", "Sewage", "Power"];
-const utilityType_domain = [1, 2, 3, 4];
+export const utilityType_domain = [1, 2, 3, 4];
+export const utility_point_icons = [
+  "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
+];
 export const utilityTypeChart = utilityTypes.map((type: any, index: any) => {
   return Object.assign({
     category: type,
     value: utilityType_domain[index],
+    icon: utility_point_icons[index],
   });
 });
 

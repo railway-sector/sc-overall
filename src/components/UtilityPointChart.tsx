@@ -5,10 +5,9 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
+  chartDataColumnSries,
   chartRendererColumn,
   dateUpdate,
-  generateUtilityNumbers,
-  generateUtilityPointData,
   queryDefinitionExpression,
   queryExpression,
   thousands_separators,
@@ -39,8 +38,12 @@ function maybeDisposeRoot(divId: any) {
 // Draw chart
 const UtilityPointChart = () => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const { contractpackages, updateChartPanelwidth, chartPanelwidth } =
-    use(MyContext);
+  const {
+    contractpackages,
+    updateChartPanelwidth,
+    chartPanelwidth,
+    utilityLinestats,
+  } = use(MyContext);
 
   // 0. Updated date
   const [asOfDate, setAsOfDate] = useState<undefined | any | unknown>(null);
@@ -56,7 +59,7 @@ const UtilityPointChart = () => {
   const chartRef = useRef<unknown | any | undefined>({});
   const [chartData, setChartData] = useState([]);
   const chartID = "utility-point-bar";
-  const [progress, setProgress] = useState([]);
+  const [progress, setProgress] = useState<any>();
 
   useEffect(() => {
     queryDefinitionExpression({
@@ -66,14 +69,26 @@ const UtilityPointChart = () => {
       featureLayer: [utilityPointLayer, utilityPointLayer1],
     });
 
-    generateUtilityPointData(contractpackages).then((response: any) => {
-      setChartData(response);
-    });
+    chartDataColumnSries({
+      contractp: contractpackages,
+      typeList: utilityTypeChart,
+      typeField: utility_typeField,
+      layer: utilityPointLayer,
+      statusstate: [0, 1],
+      statusField: utility_statusField,
+      layerName: "utility",
+    }).then((result: any) => {
+      setChartData(result[0]);
 
-    generateUtilityNumbers(contractpackages).then((response: any) => {
-      setProgress(response);
+      //--- Calculate total completion and percent compeltion
+      const total_comp = utilityLinestats ? result[1] + utilityLinestats[1] : 0;
+      const total_count = utilityLinestats
+        ? result[2] + utilityLinestats[2]
+        : 0;
+      const total_percent_comp = ((total_comp / total_count) * 100).toFixed(0);
+      setProgress([total_comp, total_percent_comp]);
     });
-  }, [contractpackages]);
+  }, [contractpackages, utilityLinestats]);
 
   // Define parameters
   const marginTop = 0;
@@ -214,9 +229,9 @@ const UtilityPointChart = () => {
               margin: "auto",
             }}
           >
-            {thousands_separators(progress[1])} %{" "}
+            {progress && thousands_separators(progress[1])} %{" "}
           </dd>
-          <div>({thousands_separators(progress[0])})</div>
+          <div>({progress && thousands_separators(progress[0])})</div>
         </dl>
       </div>
 

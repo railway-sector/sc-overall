@@ -7,7 +7,7 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
-  chartDataForMultipatch,
+  chartDataColumnSries,
   chartRendererColumn,
   queryDefinitionExpression,
   queryExpression,
@@ -53,31 +53,17 @@ const ViaductChart = () => {
       featureLayer: [viaductLayer],
     });
 
-    chartDataForMultipatch(
-      contractpackages,
-      viatypes,
-      [
-        viatypes[0].category,
-        viatypes[1].category,
-        viatypes[2].category,
-        viatypes[3].category,
-        viatypes[4].category,
-        viatypes[5].category,
-      ],
-      type_field,
-      [
-        viaductLayer,
-        viaductLayer,
-        viaductLayer,
-        viaductLayer,
-        viaductLayer,
-        viaductLayer,
-      ],
-      [1, 2, 4], // 'To be Constructed', 'Ongoing', 'Completed'
-      status_field,
-    ).then((response: any) => {
-      setChartData(response[0]);
-      setProgress(response[2]);
+    chartDataColumnSries({
+      contractp: contractpackages,
+      typeList: viatypes,
+      typeField: type_field,
+      layer: viaductLayer,
+      statusstate: [1, 2, 4],
+      statusField: status_field,
+      layerName: "viaduct",
+    }).then((result: any) => {
+      setChartData(result[0]);
+      setProgress(result[3]);
     });
   }, [contractpackages]);
 

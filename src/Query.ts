@@ -4,12 +4,7 @@
 import type { StatusStateType } from "./uniqueValues";
 import type { StatusTypenamesType } from "./uniqueValues";
 import type { LayerNameType } from "./uniqueValues";
-import {
-  dateTable,
-  lotLayer,
-  utilityLineLayer,
-  utilityPointLayer,
-} from "./layers";
+import { dateTable, lotLayer } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import * as am5 from "@amcharts/amcharts5";
 import {
@@ -17,7 +12,6 @@ import {
   handedOverLotField,
   affectedAreaField,
   cpField,
-  utilityTypes,
 } from "./uniqueValues";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -764,6 +758,98 @@ export async function totalFieldSum({
   });
 }
 
+//---------------------------------------------//
+//     Column Serie Chart Data Generation      //
+//---------------------------------------------//
+interface chartDataColumnSeriesType {
+  contractp: any;
+  typeList: any;
+  typeField: any;
+  layer: any;
+  statusstate: any;
+  statusField: any;
+  layerName: LayerNameType;
+}
+export async function chartDataColumnSries({
+  contractp,
+  typeList,
+  typeField,
+  layer,
+  statusstate,
+  statusField,
+  layerName,
+}: chartDataColumnSeriesType) {
+  //--- types: include 'others'. Each main type may have others (types = 0)
+  const compile: any = [];
+
+  //--- Main statistics
+  typeList.map((type: any) => {
+    statusstate.map((status: any) => {
+      const temp = new StatisticDefinition({
+        onStatisticField: `CASE WHEN (${typeField} = ${type.value} and ${statusField} = ${status}) THEN 1 ELSE 0 END`,
+        outStatisticFieldName: `stats${type.value}${status}`,
+        statisticType: "sum",
+      });
+      compile.push(temp);
+    });
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = compile;
+
+  const expression = queryExpression({
+    contractcp: contractp,
+  });
+  query.where = expression;
+  queryDefinitionExpression({
+    queryExpression: expression,
+    featureLayer: [layer],
+  });
+
+  //--- Query features using statistics definitions
+  let total_comp = 0;
+  let total_all = 0;
+  const qStats = layer?.queryFeatures(query).then(async (response: any) => {
+    const stats = response.features;
+    return typeList.map((type: any, index: any) => {
+      if (layerName === "utility") {
+        const comp = stats[0].attributes[`stats${type.value}${1}`];
+        const incomp = stats[0].attributes[`stats${type.value}${0}`];
+
+        total_comp += comp; //
+        total_all += comp + incomp;
+
+        return Object.assign({
+          category: typeList[index].category,
+          comp: comp,
+          incomp: incomp,
+          icon: typeList[index].icon,
+        });
+      } else if (layerName === "viaduct") {
+        const comp = stats[0].attributes[`stats${type.value}${4}`];
+        const incomp = stats[0].attributes[`stats${type.value}${1}`];
+        const ongoing = stats[0].attributes[`stats${type.value}${2}`];
+
+        total_comp += comp; //
+        total_all += comp + incomp;
+
+        return Object.assign({
+          category: typeList[index].category,
+          comp: comp,
+          incomp: incomp,
+          ongoing: ongoing,
+          icon: typeList[index].icon,
+        });
+      }
+    });
+  });
+  const data = await qStats;
+  const percent_comp = ((total_comp / total_all) * 100).toFixed(0);
+
+  return [data, total_comp, total_all, percent_comp];
+}
+
 //--------------------------------//
 //    As of Date function         //
 //--------------------------------//
@@ -917,388 +1003,6 @@ export function highlightHandedOverLot(layer: any, view: any) {
       highlight = urgentLayerView.highlight(objID);
     });
   });
-}
-
-//---------------------------------------------//
-//          Utility Relocation                 //
-//---------------------------------------------//
-
-export async function generateUtilityPointData(contractcp: any) {
-  const total_telecom_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 1 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_telecom_incomp",
-    statisticType: "sum",
-  });
-
-  const total_telecom_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 1 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_telecom_comp",
-    statisticType: "sum",
-  });
-
-  const total_water_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 2 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_water_incomp",
-    statisticType: "sum",
-  });
-
-  const total_water_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 2 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_water_comp",
-    statisticType: "sum",
-  });
-
-  const total_sewage_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 3 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_sewage_incomp",
-    statisticType: "sum",
-  });
-
-  const total_sewage_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 3 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_sewage_comp",
-    statisticType: "sum",
-  });
-
-  const total_power_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 4 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_power_incomp",
-    statisticType: "sum",
-  });
-
-  const total_power_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 4 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_power_comp",
-    statisticType: "sum",
-  });
-
-  const query = utilityPointLayer.createQuery();
-  query.outStatistics = [
-    total_telecom_incomp,
-    total_telecom_comp,
-    total_water_incomp,
-    total_water_comp,
-    total_sewage_incomp,
-    total_sewage_comp,
-    total_power_incomp,
-    total_power_comp,
-  ];
-  query.where = queryExpression({ contractcp: contractcp });
-
-  return utilityPointLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const telecom_incomp = stats.total_telecom_incomp;
-    const telecom_comp = stats.total_telecom_comp;
-    const water_incomp = stats.total_water_incomp;
-    const water_comp = stats.total_water_comp;
-    const sewage_incomp = stats.total_sewage_incomp;
-    const sewage_comp = stats.total_sewage_comp;
-    const power_incomp = stats.total_power_incomp;
-    const power_comp = stats.total_power_comp;
-
-    const data = [
-      {
-        category: utilityTypes[0],
-        comp: telecom_comp,
-        incomp: telecom_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
-      },
-      {
-        category: utilityTypes[1],
-        comp: water_comp,
-        incomp: water_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
-      },
-      {
-        category: utilityTypes[2],
-        comp: sewage_comp,
-        incomp: sewage_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
-      },
-      {
-        category: utilityTypes[3],
-        comp: power_comp,
-        incomp: power_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
-      },
-    ];
-
-    return data;
-  });
-}
-
-export async function generateUtilityLineData(contractcp: any) {
-  const total_telecom_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 1 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_telecom_incomp",
-    statisticType: "sum",
-  });
-
-  const total_telecom_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 1 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_telecom_comp",
-    statisticType: "sum",
-  });
-
-  const total_water_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 2 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_water_incomp",
-    statisticType: "sum",
-  });
-
-  const total_water_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 2 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_water_comp",
-    statisticType: "sum",
-  });
-
-  const total_sewage_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 3 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_sewage_incomp",
-    statisticType: "sum",
-  });
-
-  const total_sewage_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 3 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_sewage_comp",
-    statisticType: "sum",
-  });
-
-  const total_power_incomp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 4 and Status = 0) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_power_incomp",
-    statisticType: "sum",
-  });
-
-  const total_power_comp = new StatisticDefinition({
-    onStatisticField:
-      "CASE WHEN (UtilType = 4 and Status = 1) THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_power_comp",
-    statisticType: "sum",
-  });
-
-  const query = utilityLineLayer.createQuery();
-  query.outStatistics = [
-    total_telecom_incomp,
-    total_telecom_comp,
-    total_water_incomp,
-    total_water_comp,
-    total_sewage_incomp,
-    total_sewage_comp,
-    total_power_incomp,
-    total_power_comp,
-  ];
-
-  query.where = queryExpression({ contractcp: contractcp });
-
-  return utilityLineLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const telecom_incomp = stats.total_telecom_incomp;
-    const telecom_comp = stats.total_telecom_comp;
-    const water_incomp = stats.total_water_incomp;
-    const water_comp = stats.total_water_comp;
-    const sewage_incomp = stats.total_sewage_incomp;
-    const sewage_comp = stats.total_sewage_comp;
-    const power_incomp = stats.total_power_incomp;
-    const power_comp = stats.total_power_comp;
-
-    const data = [
-      {
-        category: utilityTypes[0],
-        comp: telecom_comp,
-        incomp: telecom_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
-      },
-      {
-        category: utilityTypes[1],
-        comp: water_comp,
-        incomp: water_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
-      },
-      {
-        category: utilityTypes[2],
-        comp: sewage_comp,
-        incomp: sewage_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
-      },
-      {
-        category: utilityTypes[3],
-        comp: power_comp,
-        incomp: power_incomp,
-        icon: "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
-      },
-    ];
-
-    return data;
-  });
-}
-
-export async function generateUtilityNumbers(contractcp: any) {
-  const total_util_number = new StatisticDefinition({
-    onStatisticField: "Status",
-    outStatisticFieldName: "total_util_number",
-    statisticType: "count",
-  });
-
-  const total_util_comp = new StatisticDefinition({
-    onStatisticField: "CASE WHEN Status = 1 THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_util_comp",
-    statisticType: "sum",
-  });
-
-  const query = new Query();
-  query.where = queryExpression({ contractcp: contractcp });
-  query.outStatistics = [total_util_number, total_util_comp];
-
-  const pointQuery = utilityPointLayer
-    .queryFeatures(query)
-    .then((response: any) => {
-      const stats = response.features[0].attributes;
-      const comp = stats.total_util_comp;
-      const total = stats.total_util_number;
-
-      return [total, comp];
-    });
-
-  const lineQuery = utilityLineLayer
-    .queryFeatures(query)
-    .then((response: any) => {
-      const stats = response.features[0].attributes;
-      const comp = stats.total_util_comp;
-      const total = stats.total_util_number;
-
-      return [total, comp];
-    });
-
-  const point = await pointQuery;
-  const line = await lineQuery;
-
-  const total = point[0] + line[0];
-  const comp = point[1] + line[1];
-  const progress = ((comp / total) * 100).toFixed(0);
-  return [total, progress];
-}
-
-//---------------------------------------------//
-//                  Viaduct                    //
-//---------------------------------------------//
-//--- Multipatch Chart Data generation
-interface chartdataMType {
-  contractp: any;
-  types: any;
-  typeField: any;
-  layer: any;
-  statusstate: any;
-  statusField: any;
-}
-export async function chartDataM({
-  contractp,
-  types,
-  typeField,
-  layer,
-  statusstate,
-  statusField,
-}: chartdataMType) {
-  //--- types: include 'others'. Each main type may have others (types = 0)
-  const compile: any = [];
-
-  //--- Main statistics
-  types.map((type: any) => {
-    statusstate.map((status: any) => {
-      const temp = new StatisticDefinition({
-        onStatisticField: `CASE WHEN (${typeField} = ${type} and ${statusField} = ${status}) THEN 1 ELSE 0 END`,
-        outStatisticFieldName: `viaduct_stats${type}${status}`,
-        statisticType: "sum",
-      });
-      compile.push(temp);
-    });
-  });
-
-  //--- Query
-  const query = new Query();
-  query.outStatistics = compile;
-
-  const expression = queryExpression({
-    contractcp: contractp,
-  });
-  query.where = expression;
-  queryDefinitionExpression({
-    queryExpression: expression,
-    featureLayer: [layer],
-  });
-
-  //--- Query features using statistics definitions
-  const qStats = layer?.queryFeatures(query).then(async (response: any) => {
-    const stats = response.features[0].attributes;
-    const incomp = stats[compile[0].outStatisticFieldName];
-    const ongoing = stats[compile[1].outStatisticFieldName];
-    const comp = stats[compile[2].outStatisticFieldName];
-    const total = incomp + ongoing + comp;
-    return [incomp, ongoing, comp, total];
-  });
-
-  return qStats;
-}
-
-export async function chartDataForMultipatch(
-  contractcp: any,
-  typeArray: any, // original
-  via_types_chosen: any,
-  typeField: any,
-  layers: any,
-  statusstate: any,
-  statusField: any,
-) {
-  let total_comp = 0;
-  let total_all = 0;
-  const data0 = via_types_chosen.map(async (type: any, index: any) => {
-    //--- Extract type value and icon from the sorce list
-    const type_matched = typeArray.find((item: any) => item.category === type);
-
-    //--- Calculate statistics
-    const stats = await chartDataM({
-      contractp: contractcp,
-      types: [type_matched?.value],
-      typeField: typeField,
-      layer: layers[index],
-      statusstate: statusstate,
-      statusField: statusField,
-    });
-
-    //--- Compute total numbers for completed and grand total
-    //----- WATCH!! only when 'incomp', 'ongoing', 'comp'
-    total_comp += stats[2]; //
-    total_all += stats[3];
-    return Object.assign({
-      category: type,
-      comp: stats[2],
-      incomp: stats[0],
-      ongoing: stats[1],
-      icon: type_matched?.icon,
-    });
-  });
-
-  //--- Resolve Promise all
-  const data = await Promise.all(data0);
-  const progress =
-    total_all > 0 ? ((total_comp / total_all) * 100).toFixed(1) : "0.0";
-
-  return [data, total_all, progress];
 }
 
 //---------------------------------------------//

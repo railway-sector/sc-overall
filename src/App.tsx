@@ -53,6 +53,7 @@ export function App(): React.JSX.Element {
   const [newAffectedAreafield, setNewAffectedAreafield] = useState<any>();
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const [newHandedOverfield, setNewHandedOverfield] = useState<any>();
+  const [utilityLinestats, setUtilityLinestats] = useState<any>();
 
   const updateContractPackage = (newContractpackage: any) => {
     setContractpackages(newContractpackage);
@@ -98,6 +99,10 @@ export function App(): React.JSX.Element {
     setNewHandedOverfield(newHandedOverfield);
   };
 
+  const updateUtilityLinestats = (newStats: any) => {
+    setUtilityLinestats(newStats);
+  };
+
   return (
     <>
       {loggedInState && (
@@ -122,6 +127,7 @@ export function App(): React.JSX.Element {
               newAffectedAreafield,
               chartPanelwidth,
               newHandedOverfield,
+              utilityLinestats,
               updateContractPackage,
               updateStatusdatefield,
               updateDatefields,
@@ -133,6 +139,7 @@ export function App(): React.JSX.Element {
               updateNewAffectedAreafield,
               updateChartPanelwidth,
               updateNewHandedOverfield,
+              updateUtilityLinestats,
             }}
           >
             <UndergroundSwitch />

@@ -11,6 +11,7 @@ type MyDropdownContextType = {
   handedoverAreafield: any;
   newAffectedAreafield: any;
   chartPanelwidth: any;
+  utilityLinestats: any;
   newHandedOverfield: any;
   updateContractPackage: any;
   updateStatusdatefield: any;
@@ -23,6 +24,7 @@ type MyDropdownContextType = {
   updateNewAffectedAreafield: any;
   updateChartPanelwidth: any;
   updateNewHandedOverfield: any;
+  updateUtilityLinestats: any;
 };
 
 const initialState = {
@@ -37,6 +39,7 @@ const initialState = {
   newAffectedAreafield: undefined,
   chartPanelwidth: undefined,
   newHandedOverfield: undefined,
+  utilityLinestats: undefined,
   updateContractPackage: undefined,
   updateStatusdatefield: undefined,
   updateDatefields: undefined,
@@ -48,6 +51,7 @@ const initialState = {
   updateNewAffectedAreafield: undefined,
   updateChartPanelwidth: undefined,
   updateNewHandedOverfield: undefined,
+  updateUtilityLinestats: undefined,
 };
 
 export const MyContext = createContext<MyDropdownContextType>({

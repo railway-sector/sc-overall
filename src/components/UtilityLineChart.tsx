@@ -5,8 +5,8 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
+  chartDataColumnSries,
   chartRendererColumn,
-  generateUtilityLineData,
   queryDefinitionExpression,
   queryExpression,
 } from "../Query";
@@ -32,8 +32,12 @@ function maybeDisposeRoot(divId: any) {
 // Draw chart
 const UtilityLineChart = () => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const { contractpackages, updateChartPanelwidth, chartPanelwidth } =
-    use(MyContext);
+  const {
+    contractpackages,
+    updateChartPanelwidth,
+    chartPanelwidth,
+    updateUtilityLinestats,
+  } = use(MyContext);
 
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
@@ -48,8 +52,17 @@ const UtilityLineChart = () => {
       featureLayer: [utilityLineLayer, utilityLineLayer1],
     });
 
-    generateUtilityLineData(contractpackages).then((response: any) => {
-      setChartData(response);
+    chartDataColumnSries({
+      contractp: contractpackages,
+      typeList: utilityTypeChart,
+      typeField: utility_typeField,
+      layer: utilityLineLayer,
+      statusstate: [0, 1],
+      statusField: utility_statusField,
+      layerName: "utility",
+    }).then((result: any) => {
+      setChartData(result[0]);
+      updateUtilityLinestats(result);
     });
   }, [contractpackages]);
 
