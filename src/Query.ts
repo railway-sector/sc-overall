@@ -26,14 +26,18 @@ import type SceneLayer from "@arcgis/core/layers/SceneLayer";
 //---------- Column Chart (stacked)----//
 export function responsiveChartColumn(chart: any, legend: any) {
   chart.onPrivate("width", (width: any) => {
-    const availableSpace = width * 0.08; // original 0.7
+    const availableSpace = width * 0.35; // original 0.7
     const new_fontSize = width / 35;
 
     legend.labels.template.setAll({
-      width: availableSpace,
       fill: am5.color("#ffffff"),
-      maxWidth: availableSpace,
       fontSize: new_fontSize,
+    });
+
+    legend.itemContainers.template.setAll({
+      width: availableSpace,
+      marginLeft: 5,
+      marginRight: 5,
     });
   });
 }
@@ -76,7 +80,13 @@ export function clickSeriesColumn({
     if (layerName === "utility") {
       selectedStatus = statusStatename === "comp" ? 1 : 0;
     } else {
-      statusStatename === "comp" ? 4 : statusStatename === "ongoing" ? 2 : 1;
+      statusStatename === "comp"
+        ? 4
+        : statusStatename === "ongoing"
+          ? 2
+          : statusStatename === "delayed"
+            ? 3
+            : 1;
     }
 
     const expression_layer = queryExpression({

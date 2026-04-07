@@ -151,11 +151,9 @@ const UtilityPointChart = () => {
 
     const legend = chart.children.push(
       am5.Legend.new(root, {
-        centerX: am5.p50,
-        centerY: am5.percent(50),
-        x: am5.percent(60),
-        y: am5.percent(97),
-        marginTop: 5,
+        marginTop: 15,
+        scale: 0.9,
+        layout: root.horizontalLayout,
       }),
     );
     legendRef.current = legend;

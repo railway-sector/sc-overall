@@ -129,11 +129,8 @@ const ViaductChart = () => {
 
     const legend = chart.children.push(
       am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        // centerY: am5.percent(50),
-        x: am5.percent(50),
         marginTop: 15,
-        // scale: 0.85,
+        scale: 0.9,
         layout: root.horizontalLayout,
       }),
     );

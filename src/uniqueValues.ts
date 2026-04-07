@@ -8,8 +8,9 @@ import LineCallout3D from "@arcgis/core/symbols/callouts/LineCallout3D";
 export type StatusTypenamesType =
   | "To be Constructed"
   | "Under Construction"
+  | "delayed"
   | "Completed";
-export type StatusStateType = "comp" | "incomp" | "ongoing";
+export type StatusStateType = "comp" | "incomp" | "ongoing" | "delayed";
 export type LayerNameType = "utility" | "viaduct" | "others";
 
 //---
