@@ -62,7 +62,6 @@ const ViaductChart = () => {
       statusField: status_field,
       layerName: "viaduct",
     }).then((result: any) => {
-      console.log(result[0]);
       setChartData(result[0]);
       setProgress(result[3]);
     });

@@ -406,6 +406,15 @@ export const highlightFilterLayerView = ({
     layer?.queryObjectIds(query).then((results: any) => {
       const objID = results;
 
+      const queryExt = new Query({
+        objectIds: objID,
+      });
+      layer?.queryExtent(queryExt).then((result: any) => {
+        if (result?.extent) {
+          view?.goTo(result.extent);
+        }
+      });
+
       highlightSelect && highlightSelect.remove();
       highlightSelect = layerView.highlight(objID);
     });
@@ -498,7 +507,15 @@ export function chartRenderer({
     const Category = Selected.category;
     const find = statusArray.find((emp: any) => emp.category === Category);
     const statusSelected = find?.value;
-    const qExpression = `${cpField} = '${contractcp}' AND ${status_field} = ${statusSelected}`;
+    const isStringOrNumber = typeof statusSelected === "number";
+    const queryField = isStringOrNumber
+      ? `${status_field} = ${statusSelected}`
+      : `${status_field} = '${statusSelected}'`;
+
+    const qExpression = queryExpression({
+      contractcp: contractcp,
+      queryField: queryField,
+    });
 
     highlightFilterLayerView({
       layer: layer,
@@ -696,8 +713,14 @@ export async function pieChartStatusData({
     const data = stats.map((result: any) => {
       const attributes = result.attributes;
       total_count += attributes.statsCollect;
+      const statusName = attributes[statusField];
+
+      //--- Check if attributes[statusField] is numeric or string
+      //--- This correctly accounts for a case where status in the attribute table is not number,
+      const isStringOrNumber = typeof statusName === "number";
+
       return Object.assign({
-        category: statusList[attributes[statusField] - 1],
+        category: isStringOrNumber ? statusList[statusName - 1] : statusName,
         value: attributes.statsCollect,
       });
     });
