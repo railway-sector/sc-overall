@@ -24,6 +24,7 @@ import {
   utilityGroupLayer,
   viaductLayer,
   pierHeadColumnLayer,
+  // maintenanceRoadLayer,
 } from "../layers";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
@@ -57,6 +58,7 @@ export default function MapDisplay() {
     arcgisScene?.map?.add(stationLayer);
     arcgisScene?.map?.add(somco_fense_layer);
     arcgisScene?.map?.add(handedOverLotLayer);
+    // arcgisScene?.map?.add(maintenanceRoadLayer);
 
     // Search components
     const sources: any = [

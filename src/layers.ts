@@ -782,6 +782,28 @@ export const scFutureTrackLayer = new FeatureLayer({
   },
 });
 
+const maintenanceRoadRenderer = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#d9dddc",
+    width: "3px",
+    style: "dash",
+  }),
+});
+
+export const maintenanceRoadLayer = new FeatureLayer({
+  portalItem: {
+    id: "4309e01d87694a789675cc925425f588",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  renderer: maintenanceRoadRenderer,
+  title: "SC Maintenance Road",
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+});
+
 //---------------------------------------------//
 //           Land, Structure, NLO              //
 //---------------------------------------------//
