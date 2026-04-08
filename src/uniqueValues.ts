@@ -693,6 +693,12 @@ export async function defineActions(event: any) {
   item.title === "Proposed Pole Working Areas" ||
   item.title === "Proposed/Recorded NGCP Lines" ||
   item.title === "Proposed Pole Relocation" ||
+  item.title === "Proposed East Service Road" ||
+  item.title === "Maintenance Road" ||
+  item.title === "Provision for Freight Line" ||
+  item.title === "Drainage" ||
+  item.title === "Permanent Fencing" ||
+  item.title === "Temporary Fencing" ||
   item.title === "Handed-Over Area" ||
   item.title === "Tree Cutting" ||
   item.title === "Tree Compensation" ||
