@@ -12,8 +12,7 @@ export type StatusTypenamesType =
   | "Completed";
 export type StatusStateType = "comp" | "incomp" | "ongoing" | "delayed";
 export type LayerNameType = "utility" | "viaduct" | "others";
-
-//---
+export type statisticsType = "count" | "sum";
 
 export const contractPackage = [
   "All",
@@ -53,6 +52,12 @@ export const timestamp_field = "timestamp";
 export const chart_width = "26vw";
 export const chart_box_width = 250;
 
+export const construction_status = [
+  "To be Constructed",
+  "Under Construction",
+  "Completed",
+];
+
 // Updated Dates
 export const updatedDateCategoryNames = [
   "Land Acquisition",
@@ -87,9 +92,6 @@ export const lotHandedOverAreaField = "HandedOverArea";
 export const percentHandedOverField = "percentHandedOver";
 export const tunnelAffectLotField = "TunnelAffected";
 export const affectedAreaField = "AffectedArea";
-
-// Lot Status
-
 export const lotStatusLabel = [
   "Paid",
   "For Payment Processing",
@@ -146,6 +148,7 @@ export const structureStatusLabel = [
   "For Offer to Compensate",
   "For Notice of Taking",
   "No Need to Acquire",
+  "For Expropriation",
 ];
 
 export const structureStatusColorHex = [
@@ -156,7 +159,9 @@ export const structureStatusColorHex = [
   "#FFAA00",
   "#FF5733",
   "#B2BEB5",
+  "#FF0000",
 ];
+
 export const structureStatusColorRgb = [
   [0, 197, 255, 0.6],
   [112, 173, 71, 0.6],
@@ -165,6 +170,7 @@ export const structureStatusColorRgb = [
   [255, 170, 0, 0.6],
   [255, 83, 73, 0.6],
   [178, 190, 181, 0.6],
+  [255, 0, 0, 0.6],
 ];
 
 export const structureStatusQuery = structureStatusLabel.map(
@@ -182,6 +188,8 @@ export const structureStatusQuery = structureStatusLabel.map(
 export const structurePteField = "PTE";
 
 // NLO
+export const occupancyField = "Occupancy";
+export const nloLoStatusField = "Status";
 export const nloStatusField = "StatusRC";
 export const nloStatusLabel = [
   "Relocated",
@@ -191,6 +199,7 @@ export const nloStatusLabel = [
   "For Appraisal/OtC/Requirements for Other Entitlements",
   "For Notice of Taking",
 ];
+
 export const nloStatusColor = [
   "#00C5FF",
   "#70AD47",
@@ -226,6 +235,8 @@ export const structureOwnershipColor = [
 ];
 
 // Structure Occupancy
+export const strucOwnerField = "StrucOwner";
+export const occupancyNameField = "Name";
 export const structureOccupancyStatusField = "Occupancy";
 export const structureOccupancyStatusLabel = ["Occupied", "Relocated"];
 export const structureOccupancyRef = [
@@ -261,6 +272,10 @@ export const valueLabelColor = "#d1d5db";
 //---------------------------------------------//
 export const treeStatus_field = "Status";
 
+export const treeScientificNameField = "ScientificName";
+export const treeCommonNameField = "CommonName";
+export const treeMunicipalityField = "Municipality";
+
 //--- Tree Cutting ---//
 export const colorsCutting = ["#71ab48", "#ffff00", "#ffaa00", "#ff0000"];
 export const statusTreeCutting: string[] = [
@@ -270,28 +285,15 @@ export const statusTreeCutting: string[] = [
   "Ongoing Acquisition of Application Documents",
 ];
 
-export const statusTreeCuttingChart = [
-  {
-    category: statusTreeCutting[0],
-    value: 1,
-    color: colorsCutting[0],
+export const statusTreeCuttingChart = statusTreeCutting.map(
+  (status: any, index: any) => {
+    return Object.assign({
+      category: status,
+      value: index + 1,
+      color: colorsCutting[index],
+    });
   },
-  {
-    category: statusTreeCutting[1],
-    value: 2,
-    color: colorsCutting[1],
-  },
-  {
-    category: statusTreeCutting[2],
-    value: 3,
-    color: colorsCutting[2],
-  },
-  {
-    category: statusTreeCutting[3],
-    value: 4,
-    color: colorsCutting[3],
-  },
-];
+);
 
 //--- Tree Compensation ---//
 export const treeCompen_status_field = "Compensation";
@@ -302,48 +304,19 @@ export const statusTreeCompensation: string[] = [
   "Compensated",
 ];
 
-export const statusTreeCompensationChart = [
-  {
-    category: statusTreeCompensation[0],
-    value: 1,
-    color: colorsCompen[0],
+export const statusTreeCompensationChart = statusTreeCompensation.map(
+  (status: any, index: any) => {
+    return Object.assign({
+      category: status,
+      value: index + 1,
+      color: colorsCompen[index],
+    });
   },
-  {
-    category: statusTreeCompensation[1],
-    value: 2,
-    color: colorsCompen[1],
-  },
-  {
-    category: statusTreeCompensation[2],
-    value: 3,
-    color: colorsCompen[2],
-  },
-];
+);
 
 //---------------------------------------------//
 //             Utility Relocation              //
 //---------------------------------------------//
-
-//--- Utility Type
-export const utility_statusField = "Status";
-export const utility_typeField = "UtilType";
-export const utilityTypes = ["Telecom", "Water", "Sewage", "Power"];
-export const utilityType_domain = [1, 2, 3, 4];
-export const utility_point_icons = [
-  "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
-];
-export const utilityTypeChart = utilityTypes.map((type: any, index: any) => {
-  return Object.assign({
-    category: type,
-    value: utilityType_domain[index],
-    icon: utility_point_icons[index],
-  });
-});
-
 //----
 interface labelSymbol3DProps {
   materialColor: any;
@@ -408,6 +381,46 @@ export const labelSymbol3DLine = ({
 
   return labelSymbol3D;
 };
+
+//--- Utility Type
+export const utility_statusField = "Status";
+export const utility_typeField = "UtilType";
+export const utilityTypes = ["Telecom", "Water", "Sewage", "Power"];
+export const utilityType_domain = [1, 2, 3, 4];
+export const utility_point_icons = [
+  "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
+];
+export const utilityTypeChart = utilityTypes.map((type: any, index: any) => {
+  return Object.assign({
+    category: type,
+    value: utilityType_domain[index],
+    icon: utility_point_icons[index],
+  });
+});
+
+export const utilityStatusLabels = ["incomp", "comp"];
+export const utilityStatusValues = [0, 1];
+export const utilityStatusArray = utilityStatusLabels.map(
+  (status: any, index: any) => {
+    return Object.assign({
+      status: status,
+      value: utilityStatusValues[index],
+    });
+  },
+);
+
+export const utilityCompanyField = "Comp_Agency";
+export const utilityRemarksField = "Remarks";
+export const utilityIdField = "Id";
+export const utilityActionField = "LAYER";
+export const utilityHeightField = "Height";
+
+//--- UtilityType2 parameters
+export const utilityType2Field = "UtilType2";
 
 //--- UtilityType2 parameters
 export const utilType2_values = [
@@ -574,6 +587,15 @@ export const viatypes = viaduct_category_label.map(
     });
   },
 );
+
+export const viaStatusLabels = ["incomp", "ongoing", "delayed", "comp"];
+export const viaStatusValues = [1, 2, 3, 4];
+export const viaStatusArray = viaStatusLabels.map((status: any, index: any) => {
+  return Object.assign({
+    status: status,
+    value: viaStatusValues[index],
+  });
+});
 
 //---------------------------------------------//
 //              Layer List                     //

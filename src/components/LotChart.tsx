@@ -1,25 +1,16 @@
 import { use, useEffect, useRef, useState } from "react";
-import { handedOverLotLayer, lotLayer } from "../layers";
+import { handedOverLotLayer, lotLayer, queryc, queryc2 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import {
-  chartRenderer,
-  dateUpdate,
-  queryDefinitionExpression,
-  thousands_separators,
-  queryExpression,
-  zoomToLayer,
-  pieChartStatusData,
-  totalFieldCount,
-  totalFieldSum,
-} from "../Query";
+import { dateUpdate, thousands_separators, zoomToLayer } from "../Query";
 import "@esri/calcite-components/dist/components/calcite-segmented-control";
 import "@esri/calcite-components/dist/components/calcite-segmented-control-item";
 import "@esri/calcite-components/dist/components/calcite-checkbox";
 import {
   affectedAreaField,
+  cpField,
   cutoff_days,
   lotHandedOverAreaField,
   lotHandedOverField,
@@ -32,10 +23,16 @@ import {
   updatedDateCategoryNames,
   valueLabelColor,
 } from "../uniqueValues";
-
 import "@arcgis/map-components/dist/components/arcgis-scene";
 import "@arcgis/map-components/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
+import {
+  pieChartStatusData,
+  totalFieldCount,
+  totalFieldSum,
+} from "../ChartGenerator";
+import { queryDefinitionExpression } from "../QueryExpression";
+import { chartRenderer } from "../ChartRenderer";
 
 // Dispose function
 function maybeDisposeRoot(divId: any) {
@@ -116,27 +113,31 @@ const LotChart = () => {
 
   // Chart data and calculate statistics
   useEffect(() => {
+    queryc.qValues = [
+      contractpackages === "All" ? undefined : contractpackages,
+    ];
+    queryc.qFields = [cpField];
+
     queryDefinitionExpression({
-      queryExpression: queryExpression({
-        contractcp: contractpackages,
-      }),
+      queryExpression: queryc.queryExpression(),
       featureLayer: [lotLayer, handedOverLotLayer],
     });
 
     //--- chart data
     pieChartStatusData({
-      contractcp: contractpackages,
+      qChart: queryc.queryExpression(),
       layer: lotLayer,
       statusList: lotStatusLabel,
       statusColor: lotStatusColor,
       statusField: lotStatusField,
+      statisticType: "count",
     }).then((result: any) => {
       setLotData(result[0]);
     });
 
     //--- total number of lots (public + private)
     totalFieldCount({
-      contractcp: contractpackages,
+      qChart: queryc.queryExpression(),
       layer: lotLayer,
       idField: lotIdField,
     }).then((result: any) => {
@@ -145,7 +146,7 @@ const LotChart = () => {
 
     //-- Total affected area
     totalFieldSum({
-      contractcp: contractpackages,
+      qChart: queryc.queryExpression(),
       layer: lotLayer,
       valueSumField: affectedAreaField,
     }).then((result: any) => {
@@ -154,7 +155,7 @@ const LotChart = () => {
 
     //--- Total handed-over area
     totalFieldSum({
-      contractcp: contractpackages,
+      qChart: queryc.queryExpression(),
       layer: lotLayer,
       valueSumField: lotHandedOverAreaField,
     }).then((result: any) => {
@@ -162,8 +163,14 @@ const LotChart = () => {
     });
 
     //--- Total handed-over lots
+    queryc2.qValues = [
+      contractpackages === "All" ? undefined : contractpackages,
+    ];
+    queryc2.qFields = [cpField];
+    queryc2.qExpression = `${lotStatusField} <> 8`;
+
     totalFieldSum({
-      contractcp: contractpackages,
+      qChart: queryc2.queryExpression(),
       layer: lotLayer,
       valueSumField: lotHandedOverField,
     }).then((result: any) => {
@@ -225,7 +232,8 @@ const LotChart = () => {
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      contractcp: contractpackages,
+      q1Value: contractpackages === "All" ? undefined : contractpackages,
+      q1Field: cpField,
       status_field: lotStatusField,
       arcgisScene: arcgisScene,
       updateChartPanelwidth: updateChartPanelwidth,
@@ -317,6 +325,21 @@ const LotChart = () => {
             </label>
           </dd>
         </dl>
+      </div>
+
+      <div style={{ display: "flex" }}>
+        <div
+          style={{
+            marginLeft: "15px",
+            fontSize: `${new_fontSize}px`,
+            color: primaryLabelColor,
+            marginTop: "auto",
+            marginBottom: "auto",
+            marginRight: "10px",
+          }}
+        >
+          Super Urgent Lot:{" "}
+        </div>
       </div>
 
       <div

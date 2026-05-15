@@ -55,6 +55,55 @@ import {
   utilLineColor,
   valueLabelColor,
 } from "./uniqueValues";
+import QueryExpressionLayers from "query-layers-expression";
+
+export const queryc = new QueryExpressionLayers(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc2 = new QueryExpressionLayers(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc3 = new QueryExpressionLayers(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const querycColumn = new QueryExpressionLayers(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
 
 /* Standalone table for Dates */
 export const dateTable = new FeatureLayer({
