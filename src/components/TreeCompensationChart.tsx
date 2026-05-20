@@ -7,7 +7,6 @@ import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   colorsCompen,
   cpField,
-  statusTreeCompensation,
   statusTreeCompensationChart,
   treeCompen_status_field,
 } from "../uniqueValues";
@@ -55,7 +54,7 @@ const TreeCompensationChart = () => {
     pieChartStatusData({
       qChart: queryc.queryExpression(),
       layer: treeCompensationLayer,
-      statusList: statusTreeCompensation,
+      statusList: statusTreeCompensationChart,
       statusColor: colorsCompen,
       statusField: treeCompen_status_field,
       statisticType: "count",

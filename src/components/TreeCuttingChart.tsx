@@ -10,7 +10,6 @@ import {
   cpField,
   cutoff_days,
   primaryLabelColor,
-  statusTreeCutting,
   statusTreeCuttingChart,
   treeStatus_field,
   updatedDateCategoryNames,
@@ -76,7 +75,7 @@ const TreeCuttingChart = () => {
     pieChartStatusData({
       qChart: queryc.queryExpression(),
       layer: treeCuttingLayer,
-      statusList: statusTreeCutting,
+      statusList: statusTreeCuttingChart,
       statusColor: colorsCutting,
       statusField: treeStatus_field,
       statisticType: "count",
