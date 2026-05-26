@@ -325,7 +325,7 @@ const LotChart = () => {
           </dd>
         </dl>
       </div>
-
+      {/* 
       <div style={{ display: "flex" }}>
         <div
           style={{
@@ -339,7 +339,7 @@ const LotChart = () => {
         >
           Super Urgent Lot:{" "}
         </div>
-      </div>
+      </div> */}
 
       <div
         style={{
