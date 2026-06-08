@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, use } from "react";
-import { queryc, treeCompensationLayer } from "../layers";
+import { queryc, queryc3, treeCompensationLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -111,15 +111,17 @@ const TreeCompensationChart = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    // Render chart
+    queryc3.qValues = [
+      contractpackages === "All" ? undefined : contractpackages,
+    ];
 
+    // Render chart
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      q1Value: contractpackages === "All" ? undefined : contractpackages,
-      q1Field: cpField,
+      qChart: queryc3,
       status_field: treeCompen_status_field,
       arcgisScene: arcgisScene,
       updateChartPanelwidth: updateChartPanelwidth,
