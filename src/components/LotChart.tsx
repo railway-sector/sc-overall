@@ -131,6 +131,7 @@ const LotChart = () => {
       statusList: lotStatusQuery,
       statusColor: lotStatusColor,
       statusField: lotStatusField,
+      statisticField: lotStatusField,
       statisticType: "count",
     }).then((result: any) => {
       setLotData(result[0]);
