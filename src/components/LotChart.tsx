@@ -2,21 +2,24 @@ import { use, useEffect, useRef, useState } from "react";
 import {
   handedOverLotLayer,
   lotLayer,
-  queryc,
-  queryc2,
-  queryc3,
+  queryc_lot2,
+  queryc_lot,
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { dateUpdate, thousands_separators, zoomToLayer } from "../Query";
+import {
+  dateUpdate,
+  thousands_separators,
+  zoomToLayer,
+  queryDefinitionExpression,
+} from "../Query";
 import "@esri/calcite-components/dist/components/calcite-segmented-control";
 import "@esri/calcite-components/dist/components/calcite-segmented-control-item";
 import "@esri/calcite-components/dist/components/calcite-checkbox";
 import {
   affectedAreaField,
-  cpField,
   cutoff_days,
   lotHandedOverAreaField,
   lotHandedOverField,
@@ -32,7 +35,6 @@ import "@arcgis/map-components/dist/components/arcgis-scene";
 import "@arcgis/map-components/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
-import { queryDefinitionExpression } from "../QueryExpression";
 import { chartRenderer } from "../ChartRenderer";
 
 // Dispose function
@@ -114,19 +116,17 @@ const LotChart = () => {
 
   // Chart data and calculate statistics
   useEffect(() => {
-    queryc.qValues = [
+    queryc_lot.qValues = [
       contractpackages === "All" ? undefined : contractpackages,
     ];
-    queryc.qFields = [cpField];
-
     queryDefinitionExpression({
-      queryExpression: queryc.queryExpression(),
+      queryExpression: queryc_lot.queryExpression(),
       featureLayer: [lotLayer, handedOverLotLayer],
     });
 
     //--- chart data
     pieChartStatusData({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statusList: lotStatusQuery,
       statusColor: lotStatusColor,
@@ -139,7 +139,7 @@ const LotChart = () => {
 
     //--- total number of lots (public + private)
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statisticField: lotIdField,
       statisticType: "count",
@@ -149,7 +149,7 @@ const LotChart = () => {
 
     //-- Total affected area
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statisticField: affectedAreaField,
       statisticType: "sum",
@@ -159,7 +159,7 @@ const LotChart = () => {
 
     //--- Total handed-over area
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statisticField: lotHandedOverAreaField,
       statisticType: "sum",
@@ -168,14 +168,13 @@ const LotChart = () => {
     });
 
     //--- Total handed-over lots
-    queryc2.qValues = [
+    queryc_lot2.qValues = [
       contractpackages === "All" ? undefined : contractpackages,
     ];
-    queryc2.qFields = [cpField];
-    queryc2.qExpression = `${lotStatusField} <> 8`;
+    queryc_lot2.qExpression = `${lotStatusField} <> 8`;
 
     fieldStatistic({
-      qChart: queryc2.queryExpression(),
+      qChart: queryc_lot2.queryExpression(),
       layer: lotLayer,
       statisticField: lotHandedOverField,
       statisticType: "sum",
@@ -232,17 +231,13 @@ const LotChart = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    queryc3.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
-
     // Render chart
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      qChart: queryc3,
+      qChart: queryc_lot,
       status_field: lotStatusField,
       arcgisScene: arcgisScene,
       updateChartPanelwidth: updateChartPanelwidth,
