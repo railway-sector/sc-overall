@@ -699,7 +699,6 @@ export async function defineActions(event: any) {
   item.title === "SC Alignment 7.1.6" ||
   item.title === "SC Alignment 3.9.3" ||
   item.title === "Substation" ||
-  item.title === "Future Track" ||
   item.title === "Households Ownership (Structure)" ||
   item.title === "Super Urgent Lot" ||
   item.title === "Handed-Over (public + private)" ||

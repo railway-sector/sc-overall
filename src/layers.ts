@@ -427,6 +427,29 @@ export const meralco_site1_prowLayer = new FeatureLayer({
   renderer: prowRenderer,
 });
 
+/* Future Track */
+const provisionForFreightLineRenderer = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#00FFC5",
+    width: "2px",
+  }),
+});
+
+export const provisionForFreightLineLayer = new FeatureLayer({
+  portalItem: {
+    id: "e37f3dab086c4063ba28c7e4d4075d60",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  layerId: 5,
+  title: "Provision for Freight Line",
+  renderer: provisionForFreightLineRenderer,
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+});
+
 /*------- NGCP Layers ---------- */
 /* NGCP Working Area */
 const ngcpPoleWARenderer = new SimpleRenderer({
@@ -889,32 +912,6 @@ export const substationLayer = new FeatureLayer({
   },
 });
 
-/* For SC Future Track */
-const scFutureTrack = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#C2C7FC",
-    width: "3px",
-    style: "solid",
-  }),
-});
-
-export const scFutureTrackLayer = new FeatureLayer({
-  portalItem: {
-    id: "a0ec0ab1c19c4927b0934b524e398a6a",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 64,
-  renderer: scFutureTrack,
-  popupEnabled: false,
-  labelsVisible: false,
-  title: "Future Track",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-
 /* Temporary Fencing */
 var temporaryFencingRenderer = new SimpleRenderer({
   symbol: new SimpleLineSymbol({
@@ -1002,29 +999,6 @@ export const drainageLayer = new FeatureLayer({
   layerId: 4,
   title: "Drainage",
   renderer: drainageRenderer,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-
-/* Future Track */
-export const futureTrackRenderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#00FFC5",
-    width: "2px",
-  }),
-});
-
-export const futureTrackLayer = new FeatureLayer({
-  portalItem: {
-    id: "e37f3dab086c4063ba28c7e4d4075d60",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 5,
-  title: "Provision for Freight Line",
-  renderer: futureTrackRenderer,
   elevationInfo: {
     mode: "on-the-ground",
   },
@@ -1739,22 +1713,21 @@ export const alignmentGroupLayer = new GroupLayer({
   visible: true,
   visibilityMode: "independent",
   layers: [
-    stationBoxLayer,
-    chainageLayer,
-    prow_tunnelLayer,
     cp_break_lines,
+    stationBoxLayer,
     pierHeadColumnLayer,
+    chainageLayer,
     substationLayer,
-    scFutureTrackLayer,
     meralco_site1_prowLayer,
     prowLayerold,
     prowLayerold2,
     prowLayer,
+    prow_tunnelLayer,
     temporaryFencingLayer,
     permanentFencingLayer,
     maintenanceRoadLayer,
     drainageLayer,
-    futureTrackLayer,
+    provisionForFreightLineLayer,
     proposedEastServiceRoadLayer,
   ],
 }); //map.add(alignmentGroupLayer, 0);
