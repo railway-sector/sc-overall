@@ -1,1 +1,0 @@
-import{ew as m}from"./index-Q1asCdSN.js";import{a as n}from"./queryTopFeatures-DOHedaRx.js";import e from"./TopFeaturesQuery-DfsGDlfB.js";async function i(o,t,r){const a=m(o);return(await n(a,e.from(t),{...r})).data.count}export{i as executeForTopCount};
