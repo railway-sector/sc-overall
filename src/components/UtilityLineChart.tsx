@@ -135,6 +135,7 @@ const UtilityLineChart = () => {
       chart: chart,
       data: chartData,
       layers: [utilityLineLayer, utilityLineLayer1],
+      qChart: queryc_utilp,
       q1Value: contractpackages === "All" ? undefined : contractpackages,
       q1Field: cpField,
       chartCategoryTypes: utilityTypeChart,
