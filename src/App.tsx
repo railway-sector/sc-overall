@@ -1,104 +1,28 @@
 import { useState, useEffect } from "react";
-import OAuthInfo from "@arcgis/core/identity/OAuthInfo";
-import IdentityManager from "@arcgis/core/identity/IdentityManager";
-import Portal from "@arcgis/core/portal/Portal";
 import { MyContext } from "./contexts/MyContext";
 import MapDisplay from "./components/MapDisplay";
 import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
-import MainChart from "./components/MainChart";
 import { contractPackage } from "./uniqueValues";
 import UndergroundSwitch from "./components/UndergroundSwitch";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ChartMain from "./components/ChartMain";
+import { authenticate } from "./autho";
+
+const queryClient = new QueryClient();
 
 export function App(): React.JSX.Element {
   const [loggedInState, setLoggedInState] = useState<boolean>(false);
   useEffect(() => {
-    const info = new OAuthInfo({
-      appId: "ktqrsHNYtJyz0ydp",
-      popup: false,
-      portalUrl: "https://gis.railway-sector.com/portal",
-    });
-
-    IdentityManager.registerOAuthInfos([info]);
-    async function loginAndLoadPortal() {
-      try {
-        await IdentityManager.checkSignInStatus(info.portalUrl + "/sharing");
-        const portal: any = new Portal({
-          // access: "public",
-          url: info.portalUrl,
-          authMode: "no-prompt",
-        });
-        portal.load().then(() => {
-          setLoggedInState(true);
-          console.log("Logged in as: ", portal.user.username);
-        });
-      } catch (error) {
-        console.error("Authentication error:", error);
-        IdentityManager.getCredential(info.portalUrl);
-      }
-    }
-    loginAndLoadPortal();
+    authenticate(setLoggedInState);
   }, []);
 
-  const [contractpackages, setContractpackages] = useState<any>(
-    contractPackage[0],
-  );
-  const [statusdatefield, setStatusdatefield] = useState<any>();
-  const [datefields, setDatefields] = useState<any>();
-  const [timesliderstate, setTimesliderstate] = useState<boolean>(false);
-  const [asofdate, setAsofdate] = useState<any>();
-  const [latestasofdate, setLatestasofdate] = useState<any>();
-  const [handedoverDatefield, setHandedoverDatefield] = useState<any>();
-  const [handedoverAreafield, setHandedoverAreafield] = useState<any>();
-  const [newAffectedAreafield, setNewAffectedAreafield] = useState<any>();
-  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-  const [newHandedOverfield, setNewHandedOverfield] = useState<any>();
+  const [cpackage, setCpackage] = useState<any>(contractPackage[0]);
   const [utilityLinestats, setUtilityLinestats] = useState<any>();
 
-  const updateContractPackage = (newContractpackage: any) => {
-    setContractpackages(newContractpackage);
+  const updateCpackage = (newContractpackage: any) => {
+    setCpackage(newContractpackage);
   };
-
-  const updateStatusdatefield = (newStatusfield: any) => {
-    setStatusdatefield(newStatusfield);
-  };
-
-  const updateDatefields = (newDateFields: any) => {
-    setDatefields(newDateFields);
-  };
-
-  const updateTimesliderstate = (newState: any) => {
-    setTimesliderstate(newState);
-  };
-
-  const updateAsofdate = (newAsofdate: any) => {
-    setAsofdate(newAsofdate);
-  };
-
-  const updateLatestasofdate = (newAsofdate: any) => {
-    setLatestasofdate(newAsofdate);
-  };
-
-  const updateHandedoverDatefield = (newDatefield: any) => {
-    setHandedoverDatefield(newDatefield);
-  };
-
-  const updateHandedoverAreafield = (newAreafield: any) => {
-    setHandedoverAreafield(newAreafield);
-  };
-
-  const updateNewAffectedAreafield = (newAreafield: any) => {
-    setNewAffectedAreafield(newAreafield);
-  };
-
-  const updateChartPanelwidth = (newWidth: any) => {
-    setChartPanelwidth(newWidth);
-  };
-
-  const updateNewHandedOverfield = (newHandedOverfield: any) => {
-    setNewHandedOverfield(newHandedOverfield);
-  };
-
   const updateUtilityLinestats = (newStats: any) => {
     setUtilityLinestats(newStats);
   };
@@ -107,7 +31,6 @@ export function App(): React.JSX.Element {
     <>
       {loggedInState && (
         <calcite-shell
-          // content-behind
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#888 #555",
@@ -116,38 +39,19 @@ export function App(): React.JSX.Element {
         >
           <MyContext
             value={{
-              contractpackages,
-              statusdatefield,
-              datefields,
-              timesliderstate,
-              asofdate,
-              latestasofdate,
-              handedoverDatefield,
-              handedoverAreafield,
-              newAffectedAreafield,
-              chartPanelwidth,
-              newHandedOverfield,
+              cpackage,
               utilityLinestats,
-              updateContractPackage,
-              updateStatusdatefield,
-              updateDatefields,
-              updateTimesliderstate,
-              updateAsofdate,
-              updateLatestasofdate,
-              updateHandedoverDatefield,
-              updateHandedoverAreafield,
-              updateNewAffectedAreafield,
-              updateChartPanelwidth,
-              updateNewHandedOverfield,
+              updateCpackage,
               updateUtilityLinestats,
             }}
           >
-            <UndergroundSwitch />
-            <MainChart />
-            <ActionPanel />
-            <MapDisplay />
-
-            <Header />
+            <QueryClientProvider client={queryClient}>
+              <UndergroundSwitch />
+              <ChartMain />
+              <ActionPanel />
+              <MapDisplay />
+              <Header />
+            </QueryClientProvider>
           </MyContext>
         </calcite-shell>
       )}

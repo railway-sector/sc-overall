@@ -37,13 +37,8 @@ function ActionPanel() {
       actionActiveWidget.hidden = true;
       shellPanel.collapsed = true;
 
-      directLineMeasure
-        ? directLineMeasure.clear()
-        : console.log("Line measure is cleared");
-
-      areaMeasure
-        ? areaMeasure.clear()
-        : console.log("Area measure is cleared");
+      directLineMeasure && directLineMeasure.clear();
+      areaMeasure && areaMeasure.clear();
     }
 
     if (nextWidget !== activeWidget) {

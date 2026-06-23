@@ -1,16 +1,8 @@
 import { useEffect, useRef, useState, use } from "react";
 import * as am5 from "@amcharts/amcharts5";
-import * as am5percent from "@amcharts/amcharts5/percent";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import {
-  dateUpdate,
-  thousands_separators,
-  queryDefinitionExpression,
-} from "../Query";
+import { dateUpdate, thousands_separators } from "../query";
 import "../index.css";
 import {
-  cutoff_days,
   primaryLabelColor,
   structureStatusQuery,
   structureStatusField,
@@ -22,8 +14,19 @@ import {
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import { occupancyLayer, queryc_struc, structureLayer } from "../layers";
-import { pieChartStatusData } from "../ChartGenerator";
-import { chartRenderer } from "../ChartRenderer";
+import { pieChartStatusData } from "../chartGenerator";
+import { chartRenderer } from "../chartRenderer";
+import { queryDefinitionExpression } from "../queryDefinition";
+import { dateDisplayKeys } from "../interfaceKeys";
+import { useQuery } from "@tanstack/react-query";
+import type { DisplayDates, ChartResponse } from "../interfaceKeys";
+import {
+  chartSetter,
+  legendSetter,
+  // maybeDisposeRoot,
+  rootSetter,
+  seriesSetter,
+} from "../chartSetter";
 
 // Dispose function
 function maybeDisposeRoot(divId: any) {
@@ -35,24 +38,58 @@ function maybeDisposeRoot(divId: any) {
 }
 
 /// Draw chart
-const StructureChart = () => {
+const ChartStructure = () => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const { contractpackages, chartPanelwidth, updateChartPanelwidth } =
-    use(MyContext);
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+  const { cpackage } = use(MyContext);
 
-  // 0. Updated date
-  const [asOfDate, setAsOfDate] = useState<undefined | any | unknown>(null);
-  const [daysPass, setDaysPass] = useState<boolean>(false);
-  useEffect(() => {
-    dateUpdate(updatedDateCategoryNames[1]).then((response: any) => {
-      setAsOfDate(response[0][0]);
-      setDaysPass(response[0][1] >= cutoff_days ? true : false);
-    });
-  }, []);
+  //--- 0. As of date
+  const { data: dates } = useQuery<DisplayDates | any>({
+    queryKey: [dateDisplayKeys.selected, updatedDateCategoryNames[1]],
+    queryFn: () => dateUpdate(updatedDateCategoryNames[1]),
+    select: (response) => {
+      return {
+        asOfDate: response[0][0],
+        daysPass: response[0][1],
+      };
+    },
+    staleTime: Infinity,
+  });
 
-  // ************************************
-  //  Chart
-  // ***********************************
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [cpackage, structureStatusField, structureLayer],
+    queryFn: async () => {
+      queryc_struc.qValues = [cpackage === "All" ? undefined : cpackage];
+
+      queryDefinitionExpression({
+        queryExpression: queryc_struc.queryExpression(),
+        featureLayer: [structureLayer, occupancyLayer],
+      });
+
+      //--- chart data
+      const chartData = await pieChartStatusData({
+        qChart: queryc_struc.queryExpression(),
+        layer: structureLayer,
+        statusList: structureStatusQuery,
+        statusColor: structureStatusColorHex,
+        statusField: structureStatusField,
+        statisticField: structureStatusField,
+        statisticType: "count",
+      });
+
+      return {
+        chartData: chartData[0] || [],
+        totaln: chartData[1] || 0,
+      };
+    },
+    staleTime: Infinity,
+  });
+  const chartData = data?.chartData || [];
+  const totaln = data?.totaln;
+
+  //------------------------------------------------------------//
+  //              Pie chart rendering declaration               //
+  //------------------------------------------------------------//
   const new_fontSize = chartPanelwidth / 22.3;
   const new_valueSize = new_fontSize * 1.55;
   const new_imageSize = chartPanelwidth * 0.03;
@@ -64,78 +101,33 @@ const StructureChart = () => {
   const pieSeriesRef = useRef<unknown | any | undefined>({});
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const [structureData, setStructureData] = useState<any>([]);
-
   const chartID = "structure-chart";
-  const [structureNumber, setStructureNumber] = useState<number>(0);
-
-  useEffect(() => {
-    queryc_struc.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
-    queryDefinitionExpression({
-      queryExpression: queryc_struc.queryExpression(),
-      featureLayer: [structureLayer, occupancyLayer],
-    });
-
-    //--- chart data
-    pieChartStatusData({
-      qChart: queryc_struc.queryExpression(),
-      layer: structureLayer,
-      statusList: structureStatusQuery,
-      statusColor: structureStatusColorHex,
-      statusField: structureStatusField,
-      statisticField: structureStatusField,
-      statisticType: "count",
-    }).then((result: any) => {
-      setStructureData(result[0]);
-      setStructureNumber(result[1]);
-    });
-  }, [contractpackages]);
 
   useEffect(() => {
     maybeDisposeRoot(chartID);
-
-    const root = am5.Root.new(chartID);
-    root.container.children.clear();
-    root._logo?.dispose();
-
-    // Set themes
-    root.setThemes([
-      am5themes_Animated.new(root),
-      am5themes_Responsive.new(root),
-    ]);
-
-    // Create chart
-    const chart = root.container.children.push(
-      am5percent.PieChart.new(root, {
-        layout: root.verticalLayout,
-      }),
-    );
+    const root = rootSetter({ chartID: chartID });
+    const chart = chartSetter({ root: root });
     chartRef.current = chart;
 
-    // Create series
-    const pieSeries = chart.series.push(
-      am5percent.PieSeries.new(root, {
-        name: "Series",
-        categoryField: "category",
-        valueField: "value",
-        //legendLabelText: "[{fill}]{category}[/]",
-        legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
-        radius: am5.percent(35), // outer radius
-        innerRadius: am5.percent(23),
-      }),
-    );
+    const pieSeries = seriesSetter({
+      chart: chart,
+      root: root,
+      categoryField: "category",
+      valueField: "value",
+      legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
+      radius: 40,
+      innerRadius: 28,
+      // scale: 0.5,
+    });
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
 
-    // Legend
-    const legend = chart.children.push(
-      am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50),
-      }),
-    );
+    const legend = legendSetter({
+      chart: chart,
+      root: root,
+      centerX: 50,
+      x: 50,
+    });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
@@ -148,8 +140,8 @@ const StructureChart = () => {
       qChart: queryc_struc,
       status_field: structureStatusField,
       arcgisScene: arcgisScene,
-      updateChartPanelwidth: updateChartPanelwidth,
-      data: structureData,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
       pieSeriesScale: new_pieSeriesScale,
       pieInnerLabel: "STRUCTURES",
       pieInnerLabelFontSize: new_pieInnerLabelFontSize,
@@ -161,10 +153,10 @@ const StructureChart = () => {
     return () => {
       root.dispose();
     };
-  }, [chartID, structureData]);
+  }, [chartID, chartData]);
 
   useEffect(() => {
-    pieSeriesRef.current?.data.setAll(structureData);
+    pieSeriesRef.current?.data.setAll(chartData);
     legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
   });
 
@@ -205,27 +197,27 @@ const StructureChart = () => {
               margin: "auto",
             }}
           >
-            {thousands_separators(structureNumber)}
+            {thousands_separators(totaln)}
           </dd>
         </dl>
       </div>
 
       <div
         style={{
-          color: daysPass === true ? "red" : "gray",
+          color: dates?.daysPass === true ? "red" : "gray",
           fontSize: `${new_asofDateSize}px`,
           float: "right",
           marginRight: "5px",
         }}
       >
-        {!asOfDate ? "" : "As of " + asOfDate}
+        {!dates?.asOfDate ? "" : "As of " + dates?.asOfDate}
       </div>
 
       {/* Structure Chart */}
       <div
         id={chartID}
         style={{
-          height: "67vh",
+          height: "69vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginBottom: "5%",
@@ -235,4 +227,4 @@ const StructureChart = () => {
   );
 }; // End of lotChartgs
 
-export default StructureChart;
+export default ChartStructure;

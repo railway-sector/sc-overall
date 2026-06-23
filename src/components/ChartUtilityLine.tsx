@@ -1,69 +1,69 @@
 import { useEffect, useRef, useState, use } from "react";
-import { queryc_utilp, utilityLineLayer, utilityLineLayer1 } from "../layers";
+import {
+  queryc_utill,
+  queryc_utilp,
+  utilityLineLayer,
+  utilityLineLayer1,
+} from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { queryDefinitionExpression } from "../Query";
 import {
-  cpField,
   utility_statusField,
   utility_typeField,
   utilityStatusArray,
   utilityTypeChart,
   viaductStatusColorForChart,
 } from "../uniqueValues";
-import { chartDataColumnSries } from "../ChartGenerator";
-import { chartRendererColumn } from "../ChartRenderer";
+import { chartDataColumnSries } from "../chartGenerator";
+import { chartRendererColumn } from "../chartRenderer";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
-
-// Dispose function
-function maybeDisposeRoot(divId: any) {
-  am5.array.each(am5.registry.rootElements, function (root) {
-    if (root.dom.id === divId) {
-      root.dispose();
-    }
-  });
-}
+import { queryDefinitionExpression } from "../queryDefinition";
+import { useQuery } from "@tanstack/react-query";
+import type { ChartResponse } from "../interfaceKeys";
+import { legendSetter, rootSetter } from "../chartSetter";
 
 // Draw chart
-const UtilityLineChart = () => {
+const ChartUtilityLine = () => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const {
-    contractpackages,
-    updateChartPanelwidth,
-    chartPanelwidth,
-    updateUtilityLinestats,
-  } = use(MyContext);
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+  const { cpackage, updateUtilityLinestats } = use(MyContext);
+
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [cpackage, utility_statusField, utilityLineLayer],
+    queryFn: async () => {
+      queryc_utill.qValues = [cpackage === "All" ? undefined : cpackage];
+
+      queryDefinitionExpression({
+        queryExpression: queryc_utill.queryExpression(),
+        featureLayer: [utilityLineLayer, utilityLineLayer1],
+      });
+
+      //--- chart data
+      const chartData = await chartDataColumnSries({
+        qChart: queryc_utill.queryExpression(),
+        chartCategoryTypes: utilityTypeChart,
+        chartCategoryTypeField: utility_typeField,
+        layer: utilityLineLayer,
+        statusstate: [0, 1],
+        statusField: utility_statusField,
+        layerName: "utility",
+      });
+
+      updateUtilityLinestats(chartData);
+
+      return {
+        chartData: chartData[0] || [],
+        totaln: chartData[1] || 0,
+      };
+    },
+    staleTime: Infinity,
+  });
+  const chartData = data?.chartData || [];
 
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const [chartData, setChartData] = useState([]);
   const chartID = "utility-line-bar";
-
-  useEffect(() => {
-    queryc_utilp.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
-    queryDefinitionExpression({
-      queryExpression: queryc_utilp.queryExpression(),
-      featureLayer: [utilityLineLayer, utilityLineLayer1],
-    });
-
-    chartDataColumnSries({
-      qChart: queryc_utilp.queryExpression(),
-      chartCategoryTypes: utilityTypeChart,
-      chartCategoryTypeField: utility_typeField,
-      layer: utilityLineLayer,
-      statusstate: [0, 1],
-      statusField: utility_statusField,
-      layerName: "utility",
-    }).then((result: any) => {
-      setChartData(result[0]);
-      updateUtilityLinestats(result);
-    });
-  }, [contractpackages]);
 
   // Define parameters
   const marginTop = 0;
@@ -80,26 +80,12 @@ const UtilityLineChart = () => {
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
-  // ************************************
-  //  Responsive Chart parameters
-  // ***********************************
   const new_chartIconSize = chartPanelwidth * 0.07;
   const new_axisFontSize = chartPanelwidth * 0.036;
 
   // Utility point
   useEffect(() => {
-    maybeDisposeRoot(chartID);
-
-    const root = am5.Root.new(chartID);
-    root.container.children.clear();
-    root._logo?.dispose();
-
-    // Set themesf
-    // https://www.amcharts.com/docs/v5/concepts/themes/
-    root.setThemes([
-      am5themes_Animated.new(root),
-      am5themes_Responsive.new(root),
-    ]);
+    const root = rootSetter({ chartID: chartID });
 
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
@@ -120,14 +106,15 @@ const UtilityLineChart = () => {
     );
     chartRef.current = chart;
 
-    const legend = chart.children.push(
-      am5.Legend.new(root, {
-        marginTop: 15,
-        scale: 0.9,
-        layout: root.horizontalLayout,
-        forceHidden: true,
-      }),
-    );
+    const legend = legendSetter({
+      chart: chart,
+      root: root,
+      marginTop: 15,
+      scale: 0.9,
+      layout: root.horizontalLayout,
+      centerX: -30,
+      // forceHidden: true,
+    });
     legendRef.current = legend;
 
     chartRendererColumn({
@@ -136,8 +123,6 @@ const UtilityLineChart = () => {
       data: chartData,
       layers: [utilityLineLayer, utilityLineLayer1],
       qChart: queryc_utilp,
-      q1Value: contractpackages === "All" ? undefined : contractpackages,
-      q1Field: cpField,
       chartCategoryTypes: utilityTypeChart,
       chartCategoryTypeField: utility_typeField,
       statusTypename: ["Completed", "To be Constructed"],
@@ -153,7 +138,7 @@ const UtilityLineChart = () => {
       chartIconPositionX: chartIconPositionX,
       chartPaddingRightIconLabel: chartPaddingRightIconLabel,
       legend: legend,
-      updateChartPanelwidth: updateChartPanelwidth,
+      updateChartPanelwidth: setChartPanelwidth,
     });
 
     return () => {
@@ -183,7 +168,7 @@ const UtilityLineChart = () => {
         id={chartID}
         style={{
           // width: "23vw",
-          height: "29vh",
+          height: "30vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginRight: "15px",
@@ -194,4 +179,4 @@ const UtilityLineChart = () => {
   );
 };
 
-export default UtilityLineChart;
+export default ChartUtilityLine;

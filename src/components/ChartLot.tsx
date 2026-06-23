@@ -5,22 +5,12 @@ import {
   queryc_lot2,
   queryc_lot,
 } from "../layers";
-import * as am5 from "@amcharts/amcharts5";
-import * as am5percent from "@amcharts/amcharts5/percent";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import {
-  dateUpdate,
-  thousands_separators,
-  zoomToLayer,
-  queryDefinitionExpression,
-} from "../Query";
+import { dateUpdate, thousands_separators, zoomToLayer } from "../query";
 import "@esri/calcite-components/dist/components/calcite-segmented-control";
 import "@esri/calcite-components/dist/components/calcite-segmented-control-item";
 import "@esri/calcite-components/dist/components/calcite-checkbox";
 import {
   affectedAreaField,
-  cutoff_days,
   lotHandedOverAreaField,
   lotHandedOverField,
   lotIdField,
@@ -34,45 +24,121 @@ import {
 import "@arcgis/map-components/dist/components/arcgis-scene";
 import "@arcgis/map-components/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
-import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
-import { chartRenderer } from "../ChartRenderer";
+import { pieChartStatusData, fieldStatistic } from "../chartGenerator";
+import { chartRenderer } from "../chartRenderer";
+import { queryDefinitionExpression } from "../queryDefinition";
+import {
+  chartSetter,
+  legendSetter,
+  rootSetter,
+  seriesSetter,
+} from "../chartSetter";
+import { dateDisplayKeys } from "../interfaceKeys";
+import { useQuery } from "@tanstack/react-query";
+import type { DisplayDates, ChartResponse } from "../interfaceKeys";
 
-// Dispose function
-function maybeDisposeRoot(divId: any) {
-  am5.array.each(am5.registry.rootElements, function (root) {
-    if (root.dom.id === divId) {
-      root.dispose();
-    }
-  });
-}
-
-///*** Others */
-/// Draw chart
-const LotChart = () => {
+const ChartLot = () => {
   const arcgisScene = document.querySelector("arcgis-scene");
-  const {
-    contractpackages,
-    updateAsofdate,
-    asofdate,
-    chartPanelwidth,
-    updateChartPanelwidth,
-  } = use(MyContext);
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+  const { cpackage } = use(MyContext);
 
-  // 0. Updated date
-  const [daysPass, setDaysPass] = useState<boolean>(false);
-  useEffect(() => {
-    dateUpdate(updatedDateCategoryNames[0]).then((response) => {
-      // Default as of date:
-      updateAsofdate(response[0][0]);
+  //--- 0. As of date
+  const { data: dates } = useQuery<DisplayDates | any>({
+    queryKey: [dateDisplayKeys.selected, updatedDateCategoryNames[0]],
+    queryFn: () => dateUpdate(updatedDateCategoryNames[0]),
+    select: (response) => {
+      return {
+        asOfDate: response[0][0],
+        daysPass: response[0][1],
+      };
+    },
+    staleTime: Infinity,
+  });
 
-      // For calculating the number of days passed since the latest date
-      setDaysPass(response[0][1] >= cutoff_days ? true : false);
-    });
-  }, []);
+  //--- Chart data
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [cpackage, lotStatusField, lotLayer],
+    queryFn: async () => {
+      queryc_lot.qValues = [cpackage === "All" ? undefined : cpackage];
 
-  // ************************************
-  //  Chart
-  // ***********************************
+      queryDefinitionExpression({
+        queryExpression: queryc_lot.queryExpression(),
+        featureLayer: [lotLayer, handedOverLotLayer],
+      });
+
+      //--- chart data
+      const chartData = await pieChartStatusData({
+        qChart: queryc_lot.queryExpression(),
+        layer: lotLayer,
+        statusList: lotStatusQuery,
+        statusColor: lotStatusColor,
+        statusField: lotStatusField,
+        statisticField: lotStatusField,
+        statisticType: "count",
+      });
+
+      //--- total number of lots (public + private)
+      const totaln = await fieldStatistic({
+        qChart: queryc_lot.queryExpression(),
+        layer: lotLayer,
+        statisticField: lotIdField,
+        statisticType: "count",
+      });
+
+      //-- Total affected area
+      const total_aa = await fieldStatistic({
+        qChart: queryc_lot.queryExpression(),
+        layer: lotLayer,
+        statisticField: affectedAreaField,
+        statisticType: "sum",
+      });
+
+      //--- Total handed-over area
+      const total_hoa = await fieldStatistic({
+        qChart: queryc_lot.queryExpression(),
+        layer: lotLayer,
+        statisticField: lotHandedOverAreaField,
+        statisticType: "sum",
+      });
+
+      //--- Total handed-over lots
+      queryc_lot2.qValues = [cpackage === "All" ? undefined : cpackage];
+      queryc_lot2.qExpression = `${lotStatusField} <> 8`;
+
+      const total_ho = await fieldStatistic({
+        qChart: queryc_lot2.queryExpression(),
+        layer: lotLayer,
+        statisticField: lotHandedOverField,
+        statisticType: "sum",
+      });
+
+      //--- Handed-Over percent
+      const perc_ho = Number(((total_ho / totaln) * 100).toFixed(0));
+
+      zoomToLayer(lotLayer, arcgisScene);
+
+      return {
+        chartData: chartData[0] || [],
+        totaln: totaln,
+        total_aa: total_aa,
+        total_hoa: total_hoa,
+        total_ho: total_ho,
+        perc_ho: perc_ho,
+      };
+    },
+    // staleTime: Infinity, // when this is defined, queryDefinitionExpression fails. segmented control?
+  });
+
+  const chartData = data?.chartData || [];
+  const totaln = data?.totaln;
+  const total_aa = data?.total_aa;
+  const total_hoa = data?.total_hoa;
+  const total_ho = data?.total_ho;
+  const perc_ho = data?.perc_ho;
+
+  //------------------------------------------------------------//
+  //              Pie chart rendering declaration               //
+  //------------------------------------------------------------//
   const new_fontSize = chartPanelwidth / 22.3;
   const new_valueSize = new_fontSize * 1.55;
   const new_imageSize = chartPanelwidth * 0.03;
@@ -84,150 +150,39 @@ const LotChart = () => {
   const pieSeriesRef = useRef<any>(null);
   const legendRef = useRef<any>(null);
   const chartRef = useRef<any>(null);
-  const [lotData, setLotData] = useState<any>([]);
-
-  // Define chart id
   const chartID = "pie-two";
 
-  const [lotNumber, setLotNumber] = useState<number>(0);
-  const [totalAffectedArea, setTotalAffectedArea] = useState<
-    number | undefined
-  >();
-
-  // Handed Over
-  const [handedOverNumber, setHandedOverNumber] = useState<number>(0);
-  const [handedOverPercent, setHandedOverPercent] = useState<number>(0);
-  const [handedOverArea, setHandedOverArea] = useState<number>(0);
-  const [handedOverCheckBox, setHandedOverCheckBox] = useState<any>(false);
+  const [hoCheckbox, setHoCheckbox] = useState<any>(false);
 
   useEffect(() => {
-    if (handedOverCheckBox === true) {
-      handedOverLotLayer.visible = true;
-    } else {
-      handedOverLotLayer.visible = false;
-    }
-  }, [handedOverCheckBox]);
+    handedOverLotLayer.visible = hoCheckbox;
+  }, [hoCheckbox]);
 
   useEffect(() => {
-    setHandedOverPercent(
-      Number(((handedOverNumber / lotNumber) * 100).toFixed(0)),
-    );
-  }, [handedOverNumber, lotNumber]);
-
-  // Chart data and calculate statistics
-  useEffect(() => {
-    queryc_lot.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
-    queryDefinitionExpression({
-      queryExpression: queryc_lot.queryExpression(),
-      featureLayer: [lotLayer, handedOverLotLayer],
-    });
-
-    //--- chart data
-    pieChartStatusData({
-      qChart: queryc_lot.queryExpression(),
-      layer: lotLayer,
-      statusList: lotStatusQuery,
-      statusColor: lotStatusColor,
-      statusField: lotStatusField,
-      statisticField: lotStatusField,
-      statisticType: "count",
-    }).then((result: any) => {
-      setLotData(result[0]);
-    });
-
-    //--- total number of lots (public + private)
-    fieldStatistic({
-      qChart: queryc_lot.queryExpression(),
-      layer: lotLayer,
-      statisticField: lotIdField,
-      statisticType: "count",
-    }).then((result: any) => {
-      setLotNumber(result);
-    });
-
-    //-- Total affected area
-    fieldStatistic({
-      qChart: queryc_lot.queryExpression(),
-      layer: lotLayer,
-      statisticField: affectedAreaField,
-      statisticType: "sum",
-    }).then((result: any) => {
-      setTotalAffectedArea(result);
-    });
-
-    //--- Total handed-over area
-    fieldStatistic({
-      qChart: queryc_lot.queryExpression(),
-      layer: lotLayer,
-      statisticField: lotHandedOverAreaField,
-      statisticType: "sum",
-    }).then((result: any) => {
-      setHandedOverArea(result);
-    });
-
-    //--- Total handed-over lots
-    queryc_lot2.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
-    queryc_lot2.qExpression = `${lotStatusField} <> 8`;
-
-    fieldStatistic({
-      qChart: queryc_lot2.queryExpression(),
-      layer: lotLayer,
-      statisticField: lotHandedOverField,
-      statisticType: "sum",
-    }).then((result: any) => {
-      setHandedOverNumber(result);
-    });
-
-    zoomToLayer(lotLayer, arcgisScene);
-  }, [contractpackages]);
-
-  useEffect(() => {
-    // Dispose previously created root element
-    maybeDisposeRoot(chartID);
-
-    const root = am5.Root.new(chartID);
-    root.container.children.clear();
-    root._logo?.dispose();
-
-    root.setThemes([
-      am5themes_Animated.new(root),
-      am5themes_Responsive.new(root),
-    ]);
-    // Define chart
-    const chart = root.container.children.push(
-      am5percent.PieChart.new(root, {
-        centerY: am5.percent(25), //-10
-        y: am5.percent(25), // space between pie chart and total lots
-        layout: root.verticalLayout,
-      }),
-    );
+    const root = rootSetter({ chartID: chartID });
+    const chart = chartSetter({ root: root, y: 25 });
     chartRef.current = chart;
-    // Define series
-    const pieSeries = chart.series.push(
-      am5percent.PieSeries.new(root, {
-        name: "Series",
-        categoryField: "category",
-        valueField: "value",
-        // legendLabelText: "{category}",
-        legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
-        radius: am5.percent(45), // outer radius
-        innerRadius: am5.percent(28),
-      }),
-    );
+
+    const pieSeries = seriesSetter({
+      chart: chart,
+      root: root,
+      categoryField: "category",
+      valueField: "value",
+      legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
+      radius: 45,
+      innerRadius: 28,
+      // scale: 1.7,
+    });
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
-    // Define legend
-    const legend = chart.children.push(
-      am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50),
-        scale: 1.03,
-      }),
-    );
+
+    // Legend
+    const legend = legendSetter({
+      chart: chart,
+      root: root,
+      centerX: 50,
+      x: 50,
+    });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
@@ -240,8 +195,8 @@ const LotChart = () => {
       qChart: queryc_lot,
       status_field: lotStatusField,
       arcgisScene: arcgisScene,
-      updateChartPanelwidth: updateChartPanelwidth,
-      data: lotData,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
       pieSeriesScale: new_pieSeriesScale,
       pieInnerLabel: "PRIVATE LOTS",
       pieInnerLabelFontSize: new_pieInnerLabelFontSize,
@@ -254,10 +209,10 @@ const LotChart = () => {
     return () => {
       root.dispose();
     };
-  }, [chartID, lotData]);
+  }, [chartID, chartData]);
 
   useEffect(() => {
-    pieSeriesRef.current?.data.setAll(lotData);
+    pieSeriesRef.current?.data.setAll(chartData);
     legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
   });
 
@@ -296,7 +251,7 @@ const LotChart = () => {
               margin: "auto",
             }}
           >
-            {thousands_separators(lotNumber)}
+            {thousands_separators(totaln)}
           </dd>
         </dl>
         <dl style={{ alignItems: "center" }}>
@@ -316,8 +271,7 @@ const LotChart = () => {
               fontWeight: "bold",
             }}
           >
-            {totalAffectedArea &&
-              thousands_separators(totalAffectedArea.toFixed(0))}
+            {total_aa && thousands_separators(total_aa.toFixed(0))}
             <label
               style={{ fontWeight: "normal", fontSize: `${new_fontSize}px` }}
             >
@@ -330,32 +284,17 @@ const LotChart = () => {
           </dd>
         </dl>
       </div>
-      {/* 
-      <div style={{ display: "flex" }}>
-        <div
-          style={{
-            marginLeft: "15px",
-            fontSize: `${new_fontSize}px`,
-            color: primaryLabelColor,
-            marginTop: "auto",
-            marginBottom: "auto",
-            marginRight: "10px",
-          }}
-        >
-          Super Urgent Lot:{" "}
-        </div>
-      </div> */}
 
       <div
         style={{
-          color: daysPass === true ? "red" : "gray",
+          color: dates?.daysPass === true ? "red" : "gray",
           fontSize: `${new_asofDateSize}px`,
           float: "right",
           marginRight: "5px",
           marginTop: "5px",
         }}
       >
-        {!asofdate ? "" : "As of " + asofdate}
+        {!dates?.asOfDate ? "" : "As of " + dates?.asOfDate}
       </div>
 
       {/* Lot Chart */}
@@ -378,7 +317,8 @@ const LotChart = () => {
           marginLeft: "15px",
           marginRight: "15px",
           justifyContent: "space-between",
-          marginBottom: "10px",
+          marginBottom: "15px",
+          marginTop: "3%",
         }}
       >
         <div
@@ -394,7 +334,7 @@ const LotChart = () => {
             label="VIEW"
             scale="l"
             oncalciteCheckboxChange={() =>
-              setHandedOverCheckBox(handedOverCheckBox === false ? true : false)
+              setHoCheckbox(hoCheckbox === false ? true : false)
             }
           ></calcite-checkbox>
         </div>
@@ -414,7 +354,7 @@ const LotChart = () => {
               margin: "auto",
             }}
           >
-            {handedOverPercent}% ({thousands_separators(handedOverNumber)})
+            {perc_ho}% ({thousands_separators(total_ho)})
           </dd>
         </dl>
         <dl style={{ alignItems: "center" }}>
@@ -434,7 +374,7 @@ const LotChart = () => {
               fontWeight: "bold",
             }}
           >
-            {handedOverArea && thousands_separators(handedOverArea.toFixed(0))}
+            {total_hoa && thousands_separators(total_hoa.toFixed(0))}
             <label
               style={{ fontWeight: "normal", fontSize: `${new_fontSize}px` }}
             >
@@ -451,4 +391,4 @@ const LotChart = () => {
   );
 }; // End of lotChartgs
 
-export default LotChart;
+export default ChartLot;
