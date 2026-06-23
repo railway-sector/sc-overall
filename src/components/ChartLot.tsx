@@ -302,7 +302,7 @@ const ChartLot = () => {
         id={chartID}
         style={{
           width: "100%",
-          height: "57vh",
+          height: "56vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginBottom: "1%",
