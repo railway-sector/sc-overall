@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 export function App(): React.JSX.Element {
   const [loggedInState, setLoggedInState] = useState<boolean>(false);
   useEffect(() => {
-    authenticate(setLoggedInState);
+    authenticate(setLoggedInState, "ktqrsHNYtJyz0ydp");
   }, []);
 
   const [cpackage, setCpackage] = useState<any>(contractPackage[0]);

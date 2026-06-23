@@ -2,9 +2,9 @@ import OAuthInfo from "@arcgis/core/identity/OAuthInfo";
 import IdentityManager from "@arcgis/core/identity/IdentityManager";
 import Portal from "@arcgis/core/portal/Portal";
 
-export async function authenticate(setLoggedInState: any) {
+export async function authenticate(setLoggedInState: any, appId: any) {
   const info = new OAuthInfo({
-    appId: "ktqrsHNYtJyz0ydp",
+    appId: appId,
     popup: false,
     portalUrl: "https://gis.railway-sector.com/portal",
   });
