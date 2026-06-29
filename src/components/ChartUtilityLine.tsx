@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, use } from "react";
 import {
+  chartstack_utill,
   queryc_utill,
   queryc_utilp,
   utilityLineLayer,
@@ -14,7 +15,6 @@ import {
   utilityTypeChart,
   viaductStatusColorForChart,
 } from "../uniqueValues";
-import { chartDataColumnSries } from "../chartGenerator";
 import { chartRendererColumn } from "../chartRenderer";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
@@ -22,6 +22,7 @@ import { queryDefinitionExpression } from "../queryDefinition";
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import { legendSetter, rootSetter } from "../chartSetter";
+import { stackColumnsChartData } from "../query";
 
 // Draw chart
 const ChartUtilityLine = () => {
@@ -40,14 +41,14 @@ const ChartUtilityLine = () => {
       });
 
       //--- chart data
-      const chartData = await chartDataColumnSries({
-        qChart: queryc_utill.queryExpression(),
-        chartCategoryTypes: utilityTypeChart,
-        chartCategoryTypeField: utility_typeField,
-        layer: utilityLineLayer,
-        statusstate: [0, 1],
+      const chartData = await stackColumnsChartData({
+        stackchart: chartstack_utill,
+        qChart: queryc_utill,
+        categoryTypes: utilityTypeChart,
+        categoryTypeField: utility_typeField,
+        layers: [utilityLineLayer],
         statusField: utility_statusField,
-        layerName: "utility",
+        statusState: [0, 2, 3, 1],
       });
 
       updateUtilityLinestats(chartData);

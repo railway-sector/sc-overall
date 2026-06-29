@@ -22,7 +22,6 @@ import SizeVariable from "@arcgis/core/renderers/visualVariables/SizeVariable.js
 import ColorVariable from "@arcgis/core/renderers/visualVariables/ColorVariable.js";
 import RotationVariable from "@arcgis/core/renderers/visualVariables/RotationVariable.js";
 import SceneLayer from "@arcgis/core/layers/SceneLayer";
-
 import {
   barangayField,
   cpField,
@@ -56,6 +55,89 @@ import {
   valueLabelColor,
 } from "./uniqueValues";
 import QueryExpressionLayers from "query-layers-expression";
+import ChartPieSeries from "chart-pie-series";
+import ChartStackColumns from "chart-stack-column";
+
+export const chartstack_utilp = new ChartStackColumns(
+  undefined, // qChart
+  undefined, // categoryTypes
+  undefined, // categoryTypeField
+  undefined, // layers
+  undefined, // status field
+  undefined, // statusState
+);
+
+export const chartstack_utill = new ChartStackColumns(
+  undefined, // qChart
+  undefined, // categoryTypes
+  undefined, // categoryTypeField
+  undefined, // layers
+  undefined, // status field
+  undefined, // statusState
+);
+
+export const chartstack_via = new ChartStackColumns(
+  undefined, // qChart
+  undefined, // categoryTypes
+  undefined, // categoryTypeField
+  undefined, // layers
+  undefined, // status field
+  undefined, // statusState
+);
+
+export const piechart = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechartaa = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechart_struc = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechart_nlo = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechart_tcut = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechart_tcomp = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
 
 export const queryc_lot = new QueryExpressionLayers(
   [undefined, undefined],

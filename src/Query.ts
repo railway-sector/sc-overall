@@ -10,6 +10,8 @@ import {
   affectedAreaField,
   cpField,
 } from "./uniqueValues";
+import type { statisticsType } from "./uniqueValues";
+import Query from "@arcgis/core/rest/support/Query";
 
 //--------------------------------//
 //    As of Date function         //
@@ -55,6 +57,102 @@ export async function dateUpdate(category: any) {
   });
 }
 
+//---------------------------------------------//
+//               Pie chart                     //
+//---------------------------------------------//
+// 'piechart' = constant declared from class ChartPieSeries in layers.ts
+interface pieChartDataType {
+  piechart: any;
+  qChart: any;
+  layer: any;
+  statusList: any;
+  statusField: any;
+  statisticField: any;
+  statisticType: "sum" | "count";
+}
+export async function pieChartData({
+  piechart,
+  qChart,
+  layer,
+  statusList,
+  statusField,
+  statisticField,
+  statisticType,
+}: pieChartDataType) {
+  piechart.qChart = qChart.queryExpression();
+  piechart.layer = layer;
+  piechart.statusList = statusList;
+  piechart.statusField = statusField;
+  piechart.statisticField = statisticField;
+  piechart.statisticType = statisticType;
+
+  return await piechart.chartDataPieSeries();
+}
+
+interface fieldStatisticType {
+  qChart: any;
+  layer: any;
+  statisticField: any;
+  statisticType: statisticsType;
+}
+
+export async function fieldStatistic({
+  qChart,
+  layer,
+  statisticField,
+  statisticType,
+}: fieldStatisticType) {
+  const statsCollect = new StatisticDefinition({
+    onStatisticField: statisticField,
+    outStatisticFieldName: "statsCollect",
+    statisticType: statisticType,
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+  query.where = qChart;
+
+  return layer?.queryFeatures(query).then((response: any) => {
+    return response.features[0].attributes.statsCollect;
+  });
+}
+
+//---------------------------------------------//
+//               Stack Columns                 //
+//---------------------------------------------//
+interface stackColumnsDataType {
+  stackchart: any;
+  qChart: any;
+  categoryTypes: any;
+  categoryTypeField: any;
+  layers: any;
+  statusField: any;
+  statusState: any;
+}
+
+export async function stackColumnsChartData({
+  stackchart,
+  qChart,
+  categoryTypes,
+  categoryTypeField,
+  layers,
+  statusField,
+  statusState,
+}: stackColumnsDataType) {
+  stackchart.qChart = qChart.queryExpression();
+  stackchart.categoryTypes = categoryTypes;
+  stackchart.categoryTypeField = categoryTypeField;
+  stackchart.layers = layers;
+  stackchart.statusField = statusField;
+  stackchart.statusState = statusState;
+
+  return await stackchart.chartDataStackColumns();
+}
+
+//---------------------------------------------//
+//           Lot (handed over area)            //
+//---------------------------------------------//
 export async function generateHandedOverAreaData() {
   const total_affected_area = new StatisticDefinition({
     onStatisticField: affectedAreaField,

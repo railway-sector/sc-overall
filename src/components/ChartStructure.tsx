@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, use } from "react";
-import * as am5 from "@amcharts/amcharts5";
-import { dateUpdate, thousands_separators } from "../query";
+import { dateUpdate, pieChartData, thousands_separators } from "../query";
 import "../index.css";
 import {
   primaryLabelColor,
@@ -8,13 +7,15 @@ import {
   structureStatusField,
   updatedDateCategoryNames,
   valueLabelColor,
-  structureStatusColorHex,
-  // structurePteField,
 } from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
-import { occupancyLayer, queryc_struc, structureLayer } from "../layers";
-import { pieChartStatusData } from "../chartGenerator";
+import {
+  occupancyLayer,
+  piechart_struc,
+  queryc_struc,
+  structureLayer,
+} from "../layers";
 import { chartRenderer } from "../chartRenderer";
 import { queryDefinitionExpression } from "../queryDefinition";
 import { dateDisplayKeys } from "../interfaceKeys";
@@ -27,15 +28,6 @@ import {
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
-
-// Dispose function
-function maybeDisposeRoot(divId: any) {
-  am5.array.each(am5.registry.rootElements, function (root) {
-    if (root.dom.id === divId) {
-      root.dispose();
-    }
-  });
-}
 
 /// Draw chart
 const ChartStructure = () => {
@@ -67,11 +59,11 @@ const ChartStructure = () => {
       });
 
       //--- chart data
-      const chartData = await pieChartStatusData({
-        qChart: queryc_struc.queryExpression(),
+      const chartData = await pieChartData({
+        piechart: piechart_struc,
+        qChart: queryc_struc,
         layer: structureLayer,
         statusList: structureStatusQuery,
-        statusColor: structureStatusColorHex,
         statusField: structureStatusField,
         statisticField: structureStatusField,
         statisticType: "count",
@@ -104,7 +96,6 @@ const ChartStructure = () => {
   const chartID = "structure-chart";
 
   useEffect(() => {
-    maybeDisposeRoot(chartID);
     const root = rootSetter({ chartID: chartID });
     const chart = chartSetter({ root: root });
     chartRef.current = chart;
