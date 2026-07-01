@@ -13,6 +13,15 @@ import {
 import type { statisticsType } from "./uniqueValues";
 import Query from "@arcgis/core/rest/support/Query";
 
+//---------------------------------------------------------//
+//                 Add Layers to Map                      //
+//---------------------------------------------------------//
+export function addLayersToMap(map: any, layersList: any[]) {
+  layersList.forEach((layer: any) => {
+    map.add(layer);
+  });
+}
+
 //--------------------------------//
 //    As of Date function         //
 //--------------------------------//

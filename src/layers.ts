@@ -2825,3 +2825,35 @@ export const viaductLayer = new SceneLayer({
     ],
   },
 });
+
+// Search components
+export const sources: any = [
+  {
+    layer: lotLayer,
+    searchFields: ["LotID"],
+    displayField: "LotID",
+    exactMatch: false,
+    outFields: ["LotID"],
+    name: "Lot ID",
+    placeholder: "example: 10083",
+  },
+  {
+    layer: structureLayer,
+    searchFields: ["StrucID"],
+    displayField: "StrucID",
+    exactMatch: false,
+    outFields: ["StrucID"],
+    name: "Structure ID",
+    placeholder: "example: NSRP-01-02-ML007",
+  },
+  {
+    layer: pierAccessLayer,
+    searchFields: ["PierNumber"],
+    displayField: "PierNumber",
+    exactMatch: false,
+    outFields: ["PierNumber"],
+    name: "Pier No",
+    zoomScale: 1000,
+    placeholder: "example: P-288",
+  },
+];
