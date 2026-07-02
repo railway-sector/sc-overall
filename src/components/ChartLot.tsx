@@ -165,7 +165,7 @@ const ChartLot = () => {
 
   useEffect(() => {
     const root = rootSetter({ chartID: chartID });
-    const chart = chartSetter({ root: root, y: 25 });
+    const chart = chartSetter({ root: root });
     chartRef.current = chart;
 
     const pieSeries = seriesSetter({
@@ -307,7 +307,7 @@ const ChartLot = () => {
         id={chartID}
         style={{
           width: "100%",
-          height: "56vh",
+          height: "57vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginBottom: "1%",
