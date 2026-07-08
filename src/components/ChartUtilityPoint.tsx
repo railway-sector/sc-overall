@@ -24,12 +24,12 @@ import {
 } from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
-import { chartRendererColumn } from "../chartRenderer";
 import { queryDefinitionExpression } from "../queryDefinition";
 import { legendSetter, rootSetter } from "../chartSetter";
 import { dateDisplayKeys } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
 import type { DisplayDates, ChartResponse } from "../interfaceKeys";
+import ChartStackColumnRender from "chart-stack-column-render";
 
 // Draw chart
 const ChartUtilityPoint = () => {
@@ -50,7 +50,7 @@ const ChartUtilityPoint = () => {
     staleTime: Infinity,
   });
 
-  const { data } = useQuery<ChartResponse | any>({
+  const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [
       cpackage,
       utility_statusField,
@@ -155,29 +155,33 @@ const ChartUtilityPoint = () => {
     });
     legendRef.current = legend;
 
-    chartRendererColumn({
-      root: root,
-      chart: chart,
-      data: chartData,
-      layers: [utilityPointLayer, utilityPointLayer1],
-      qChart: queryc_utilp,
-      chartCategoryTypes: utilityTypeChart,
-      chartCategoryTypeField: utility_typeField,
-      statusTypename: ["Completed", "To be Constructed"],
-      statusStatename: ["comp", "incomp"],
-      statusArray: utilityStatusArray,
-      statusField: utility_statusField,
-      seriesStatusColor: viaductStatusColorForChart,
-      strokeColor: chartBorderLineColor,
-      strokeWidth: chartBorderLineWidth,
-      arcgisScene: arcgisScene,
-      new_chartIconSize: new_chartIconSize,
-      new_axisFontSize: new_axisFontSize,
-      chartIconPositionX: chartIconPositionX,
-      chartPaddingRightIconLabel: chartPaddingRightIconLabel,
-      legend: legend,
-      updateChartPanelwidth: setChartPanelwidth,
-    });
+    const crender = new ChartStackColumnRender(
+      false,
+      [utilityPointLayer, utilityPointLayer1],
+      root,
+      chart,
+      chartData,
+      undefined,
+      queryc_utilp,
+      utilityTypeChart,
+      utility_typeField,
+      ["Completed", "To be Constructed"],
+      ["comp", "incomp"],
+      utilityStatusArray,
+      utility_statusField,
+      viaductStatusColorForChart,
+      chartBorderLineColor,
+      chartBorderLineWidth,
+      arcgisScene?.view,
+      undefined,
+      new_chartIconSize,
+      new_axisFontSize,
+      chartIconPositionX,
+      chartPaddingRightIconLabel,
+      legend,
+      setChartPanelwidth,
+    );
+    crender.chartRendererColumn();
     return () => {
       root.dispose();
     };
@@ -220,6 +224,7 @@ const ChartUtilityPoint = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {perc_comp && thousands_separators(perc_comp)} %{" "}
@@ -254,6 +259,7 @@ const ChartUtilityPoint = () => {
           color: "white",
           marginRight: "15px",
           marginLeft: "15px",
+          opacity: isLoading ? 0 : 1,
         }}
       ></div>
     </>

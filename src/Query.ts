@@ -2,14 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable no-unsafe-optional-chaining */
 
-import { dateTable, lotLayer } from "./layers";
+import { dateTable } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
-import {
-  lotHandedOverAreaField,
-  handedOverLotField,
-  affectedAreaField,
-  cpField,
-} from "./uniqueValues";
+import { handedOverLotField, cpField, lotStatusField } from "./uniqueValues";
 import type { statisticsType } from "./uniqueValues";
 import Query from "@arcgis/core/rest/support/Query";
 
@@ -162,46 +157,46 @@ export async function stackColumnsChartData({
 //---------------------------------------------//
 //           Lot (handed over area)            //
 //---------------------------------------------//
-export async function generateHandedOverAreaData() {
-  const total_affected_area = new StatisticDefinition({
-    onStatisticField: affectedAreaField,
-    outStatisticFieldName: "total_affected_area",
-    statisticType: "sum",
-  });
+interface HandedOverArea {
+  aa_field: any;
+  hoa_field: any;
+  cp_list: any;
+  layer: any;
+}
+export async function handedOverAreaByContractp({
+  aa_field,
+  hoa_field,
+  cp_list,
+  layer,
+}: HandedOverArea) {
+  return await Promise.all(
+    cp_list.map(async (cp: any) => {
+      const aa = new StatisticDefinition({
+        onStatisticField: aa_field,
+        outStatisticFieldName: "aa",
+        statisticType: "sum",
+      });
 
-  const total_handedover_area = new StatisticDefinition({
-    onStatisticField: lotHandedOverAreaField,
-    outStatisticFieldName: "total_handedover_area",
-    statisticType: "sum",
-  });
+      const hoa = new StatisticDefinition({
+        onStatisticField: hoa_field,
+        outStatisticFieldName: "hoa",
+        statisticType: "sum",
+      });
 
-  const query = lotLayer.createQuery();
-  query.where = `${cpField} IS NOT NULL`;
-  query.outStatistics = [total_affected_area, total_handedover_area];
-  query.orderByFields = [cpField];
-  query.groupByFieldsForStatistics = [cpField];
+      const query = layer.createQuery();
+      query.where = `CP = '${cp}' AND ${cpField} IS NOT NULL`;
+      query.outStatistics = [aa, hoa];
 
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const affected = attributes.total_affected_area;
-      const handedOver = attributes.total_handedover_area;
-      const cp = attributes.CP;
+      const response = await layer?.queryFeatures(query);
+      const attributes = response.features[0].attributes;
+      const perc = ((attributes.hoa / attributes.aa) * 100).toFixed(0);
 
-      const percent = ((handedOver / affected) * 100).toFixed(0);
-
-      return Object.assign(
-        {},
-        {
-          category: cp,
-          value: percent,
-        },
-      );
-    });
-
-    return data;
-  });
+      return {
+        category: cp,
+        value: perc ?? 0,
+      };
+    }),
+  );
 }
 
 export const dateFormat = (inputDate: any, format: any) => {
@@ -233,23 +228,16 @@ export const dateFormat = (inputDate: any, format: any) => {
 //                  Highlight Lot              //
 //---------------------------------------------//
 let highlight: any;
-export function highlightLot(layer: any, view: any) {
-  view?.whenLayerView(layer).then((urgentLayerView: any) => {
-    const query = layer.createQuery();
-    layer.queryFeatures(query).then((results: any) => {
-      const length = results.features.length;
-      const objID = [];
-      for (let i = 0; i < length; i++) {
-        const obj = results.features[i].attributes.OBJECTID;
-        objID.push(obj);
-      }
+export async function highlightLot(layer: any, view: any) {
+  const query = layer.createQuery();
 
-      if (highlight) {
-        highlight.remove();
-      }
-      highlight = urgentLayerView.highlight(objID);
-    });
-  });
+  const layerView = await view?.whenLayerView(layer);
+  const results = await layer?.queryObjectIds(query);
+
+  if (highlight) {
+    highlight.remove();
+  }
+  highlight = layerView.highlight(results);
 }
 
 export function highlightRemove() {
@@ -258,24 +246,17 @@ export function highlightRemove() {
   }
 }
 
-export function highlightHandedOverLot(layer: any, view: any) {
-  view?.whenLayerView(layer).then((urgentLayerView: any) => {
-    const query = layer.createQuery();
-    query.where = `${handedOverLotField} = 1`;
-    layer.queryFeatures(query).then((results: any) => {
-      const length = results.features.length;
-      const objID = [];
-      for (let i = 0; i < length; i++) {
-        const obj = results.features[i].attributes.OBJECTID;
-        objID.push(obj);
-      }
+export async function highlightHandedOverLot(layer: any, view: any) {
+  const query = layer.createQuery();
+  query.where = `${handedOverLotField} = 1 AND ${lotStatusField} <> 8`;
 
-      if (highlight) {
-        highlight.remove();
-      }
-      highlight = urgentLayerView.highlight(objID);
-    });
-  });
+  const layerView = view?.whenLayerView(layer);
+  const results = await layer?.queryObjectIds(query);
+
+  if (highlight) {
+    highlight.remove();
+  }
+  highlight = layerView.highlight(results);
 }
 
 //---------------------------------------------//

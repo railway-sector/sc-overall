@@ -21,13 +21,13 @@ import {
   viaStatusArray,
   viatypes,
 } from "../uniqueValues";
-import { chartRendererColumn } from "../chartRenderer";
 import { queryDefinitionExpression } from "../queryDefinition";
 import { legendSetter, rootSetter } from "../chartSetter";
 import { dateDisplayKeys } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
 import type { DisplayDates, ChartResponse } from "../interfaceKeys";
 import { dateUpdate, stackColumnsChartData } from "../query";
+import ChartStackColumnRender from "chart-stack-column-render";
 
 // Draw chart
 const ChartViaduct = () => {
@@ -51,7 +51,7 @@ const ChartViaduct = () => {
     staleTime: Infinity,
   });
 
-  const { data } = useQuery<ChartResponse | any>({
+  const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [cpackage, status_field, viaductLayer],
     queryFn: async () => {
       queryc_via.qValues = [cpackage === "All" ? undefined : cpackage];
@@ -139,30 +139,33 @@ const ChartViaduct = () => {
     });
     legendRef.current = legend;
 
-    chartRendererColumn({
-      root: root,
-      chart: chart,
-      data: chartData,
-      layers: [viaductLayer],
-      qChart: queryc_via,
-      chartCategoryTypes: viatypes,
-      chartCategoryTypeField: type_field,
-      statusTypename: ["Completed", "To be Constructed", "Under Construction"],
-      statusStatename: ["comp", "incomp", "ongoing"],
-      statusArray: viaStatusArray,
-      statusField: status_field,
-      seriesStatusColor: viaductStatusColorForChart,
-      strokeColor: chartBorderLineColor,
-      strokeWidth: chartBorderLineWidth,
-      arcgisScene: arcgisScene,
-      new_chartIconSize: new_chartIconSize,
-      new_axisFontSize: new_axisFontSize,
-      chartIconPositionX: chartIconPositionX,
-      chartPaddingRightIconLabel: chartPaddingRightIconLabel,
-      legend: legend,
-      updateChartPanelwidth: setChartPanelwidth,
-    });
-    chart.appear(1000, 100);
+    const crender = new ChartStackColumnRender(
+      false,
+      [viaductLayer],
+      root,
+      chart,
+      chartData,
+      undefined,
+      queryc_via,
+      viatypes,
+      type_field,
+      ["Completed", "To be Constructed"],
+      ["comp", "incomp"],
+      viaStatusArray,
+      status_field,
+      viaductStatusColorForChart,
+      chartBorderLineColor,
+      chartBorderLineWidth,
+      arcgisScene?.view,
+      undefined,
+      new_chartIconSize,
+      new_axisFontSize,
+      chartIconPositionX,
+      chartPaddingRightIconLabel,
+      legend,
+      setChartPanelwidth,
+    );
+    crender.chartRendererColumn();
 
     return () => {
       root.dispose();
@@ -208,6 +211,7 @@ const ChartViaduct = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {perc_comp} %
@@ -234,6 +238,7 @@ const ChartViaduct = () => {
           marginRight: "13px",
           marginLeft: "13px",
           marginTop: "10px",
+          opacity: isLoading ? 0 : 1,
         }}
       ></div>
     </>

@@ -17,7 +17,7 @@ import {
   ngcp_pole7,
   ngcp_working_area6,
 } from "../layers";
-import HandedOverAreaChart from "./HandedOverAreaChart";
+import HandedOverAreaChart from "./ChartHandedOverArea";
 
 function ActionPanel() {
   const [activeWidget, setActiveWidget] = useState(null);
