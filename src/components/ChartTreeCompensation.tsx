@@ -109,7 +109,7 @@ const ChartTreeCompensation = () => {
       setChartPanelwidth,
       chartData,
       new_pieSeriesScale,
-      "HOUSEHOLDS",
+      "TREES",
       new_pieInnerLabelFontSize,
       new_pieInnerValueFontSize,
       treeCompensationLayer,
