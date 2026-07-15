@@ -18,16 +18,30 @@ import {
   ngcp_working_area6,
 } from "../layers";
 import HandedOverAreaChart from "./ChartHandedOverArea";
+import { zoomToFullExtent } from "../query";
 
 function ActionPanel() {
+  const arcgisScene = document.querySelector("arcgis-scene");
+  const shellPanel: any = document.getElementById("left-shell-panel");
+
+  //-----------------------------------------
+  //   Define active & next widget states
+  //-----------------------------------------
   const [activeWidget, setActiveWidget] = useState(null);
   const [nextWidget, setNextWidget] = useState(null);
-  const arcgisScene = document.querySelector("arcgis-scene");
+
+  //--- Click action handler function for active & next widget
+  const handleActionClick = (event: any) => {
+    const id = event.target.id;
+    setNextWidget(id);
+    setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
+  };
+
+  //--- Line & Area measurement widget
   const directLineMeasure = document.querySelector(
     "arcgis-direct-line-measurement-3d",
   );
   const areaMeasure = document.querySelector("arcgis-area-measurement-3d");
-  const shellPanel: any = document.getElementById("left-shell-panel");
 
   useEffect(() => {
     if (activeWidget) {
@@ -48,8 +62,7 @@ function ActionPanel() {
       actionNextWidget.hidden = false;
       shellPanel.collapsed = false;
 
-      // Timeslider and handedOver charts do not appear in shell-panel so
-      // need to collapse shell-panel manually
+      //--- Close shelPanell
       if (nextWidget === "handedover-charts") {
         shellPanel.collapsed = true;
       }
@@ -81,10 +94,7 @@ function ActionPanel() {
             text="layers"
             id="layers"
             //textEnabled={true}
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -92,10 +102,7 @@ function ActionPanel() {
             icon="basemap"
             text="basemaps"
             id="basemaps"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -103,10 +110,7 @@ function ActionPanel() {
             icon="graph-bar-side-by-side"
             text="Handed-Over Area"
             id="handedover-charts"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -114,10 +118,7 @@ function ActionPanel() {
             icon="measure-line"
             text="Line Measurement"
             id="directline-measure"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -125,10 +126,7 @@ function ActionPanel() {
             icon="measure-area"
             text="Area Measurement"
             id="area-measure"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -136,10 +134,7 @@ function ActionPanel() {
             icon="information"
             text="Information"
             id="information"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
         </calcite-action-bar>
 
@@ -155,42 +150,15 @@ function ActionPanel() {
             onarcgisTriggerAction={(event) => {
               const { id } = event.detail.action;
               if (id === "full-extent-ngcpwa6") {
-                ngcp_working_area6.fullExtent &&
-                  arcgisScene
-                    ?.goTo(ngcp_working_area6.fullExtent)
-                    .catch((error) => {
-                      if (error.name !== "AbortError") {
-                        console.error(error);
-                      }
-                    });
+                zoomToFullExtent(ngcp_working_area6, arcgisScene?.view);
               } else if (id === "full-extent-ngcpline6") {
-                ngcp_line6.fullExtent &&
-                  arcgisScene?.goTo(ngcp_line6.fullExtent).catch((error) => {
-                    if (error.name !== "AbortError") {
-                      console.error(error);
-                    }
-                  });
+                zoomToFullExtent(ngcp_line6, arcgisScene?.view);
               } else if (id === "full-extent-ngcpline7") {
-                ngcp_line7.fullExtent &&
-                  arcgisScene?.goTo(ngcp_line7.fullExtent).catch((error) => {
-                    if (error.name !== "AbortError") {
-                      console.error(error);
-                    }
-                  });
+                zoomToFullExtent(ngcp_line7, arcgisScene?.view);
               } else if (id === "full-extent-ngcppolerelo6") {
-                ngcp_pole6.fullExtent &&
-                  arcgisScene?.goTo(ngcp_pole6.fullExtent).catch((error) => {
-                    if (error.name !== "AbortError") {
-                      console.error(error);
-                    }
-                  });
+                zoomToFullExtent(ngcp_pole6, arcgisScene?.view);
               } else if (id === "full-extent-ngcppolerelo7") {
-                ngcp_pole7.fullExtent &&
-                  arcgisScene?.goTo(ngcp_pole7.fullExtent).catch((error) => {
-                    if (error.name !== "AbortError") {
-                      console.error(error);
-                    }
-                  });
+                zoomToFullExtent(ngcp_pole7, arcgisScene?.view);
               }
             }}
           ></arcgis-layer-list>

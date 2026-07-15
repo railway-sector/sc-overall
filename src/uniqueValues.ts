@@ -1917,84 +1917,40 @@ export const via_popup = new PopupTemplate({
 //---------------------------------------------//
 //              Layer List                     //
 //---------------------------------------------//
-// Layter list
+function zoomToAction(id: string) {
+  return new Collection([
+    new Collection([
+      new ActionButton({
+        title: "Zoom to Area",
+        icon: "zoom-in-fixed",
+        id: id,
+      }),
+    ]),
+  ]);
+}
+
 export async function defineActions(event: any) {
   const { item } = event;
 
   // NGCP Site 6
   if (item.title === "Proposed Pole Working Areas") {
-    item.actionsSections = new Collection([
-      new Collection([
-        new ActionButton({
-          title: "Zoom to Area",
-          icon: "zoom-in-fixed",
-          id: "full-extent-ngcpwa6",
-        }),
-      ]),
-    ]);
+    item.actionsSections = zoomToAction("full-extent-ngcpwa6");
   }
 
   if (item.title === "Proposed/Recorded NGCP Lines") {
-    item.actionsSections = new Collection([
-      new Collection([
-        new ActionButton({
-          title: "Zoom to Area",
-          icon: "zoom-in-fixed",
-          id: "full-extent-ngcpline6",
-        }),
-      ]),
-    ]);
+    item.actionsSections = zoomToAction("full-extent-ngcpline6");
   }
 
   if (item.title === "Proposed Pole Relocation") {
-    item.actionsSections = new Collection([
-      new Collection([
-        new ActionButton({
-          title: "Zoom to Area",
-          icon: "zoom-in-fixed",
-          id: "full-extent-ngcppolerelo6",
-        }),
-      ]),
-    ]);
+    item.actionsSections = zoomToAction("full-extent-ngcppolerelo6");
   }
-
-  // NGCP Site 7
-  // if (item.title === "Proposed Pole Working Areas") {
-  //   item.actionsSections = new Collection([
-  //     new Collection([
-  //       new ActionButton({
-  //         title: "Zoom to Area",
-  //         icon: "zoom-in-fixed",
-  //         id: "full-extent-ngcpwa7",
-  //       }),
-  //     ]),
-  //   ]);
-
-  //   // highlightLot(ngcp_tagged_structureLayer);
-  // }
 
   if (item.title === "Proposed/Recorded NGCP Lines") {
-    item.actionsSections = new Collection([
-      new Collection([
-        new ActionButton({
-          title: "Zoom to Area",
-          icon: "zoom-in-fixed",
-          id: "full-extent-ngcpline7",
-        }),
-      ]),
-    ]);
+    item.actionsSections = zoomToAction("full-extent-ngcpline7");
   }
 
   if (item.title === "Proposed Pole Relocation") {
-    item.actionsSections = new Collection([
-      new Collection([
-        new ActionButton({
-          title: "Zoom to Area",
-          icon: "zoom-in-fixed",
-          id: "full-extent-ngcppolerelo7",
-        }),
-      ]),
-    ]);
+    item.actionsSections = zoomToAction("full-extent-ngcppolerelo7");
   }
 
   if (item.layer.type !== "group") {
@@ -2003,14 +1959,6 @@ export async function defineActions(event: any) {
       open: true,
     };
   }
-
-  // if (item.title === "Super Urgent Lot") {
-  //   // highlightLot(superUrgentLotLayer);
-  // } else if (item.title === "Handed-Over (public + private)") {
-  //   // highlightLot(handedOverLotLayer);
-  // } else if (item.title === "Tunnel Affected") {
-  //   highlightLot(tunnelAffectedLotLayer, arcgisScene);
-  // }
 
   item.title === "Chainage" ||
   item.title === "SC Alignment 7.1.6" ||
