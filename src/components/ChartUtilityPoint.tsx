@@ -108,8 +108,8 @@ const ChartUtilityPoint = () => {
   // ***********************************
   const new_fontSize = chartPanelwidth / 20;
   const new_valueSize = new_fontSize * 1.55;
-  const new_chartIconSize = chartPanelwidth * 0.07;
-  const new_axisFontSize = chartPanelwidth * 0.036;
+  const new_chartIconSize = chartPanelwidth * 0.06;
+  const new_axisFontSize = chartPanelwidth * 0.03;
   const new_imageSize = chartPanelwidth * 0.04;
   const new_asofDateSize = chartPanelwidth * 0.032;
 

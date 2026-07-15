@@ -1323,7 +1323,7 @@ export const util_type_icons = [
   "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
   "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
   "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
+  "https://EijiGorilla.github.io/Symbols/Gas_Logo2.svg",
 ];
 
 export const util_types = [
@@ -1331,6 +1331,7 @@ export const util_types = [
   { value: 2, category: "Water", icon: util_type_icons[1] },
   { value: 3, category: "Sewage", icon: util_type_icons[2] },
   { value: 4, category: "Power", icon: util_type_icons[3] },
+  { value: 5, category: "Oil & Gas", icon: util_type_icons[4] },
 ];
 
 export const util_status_q = [

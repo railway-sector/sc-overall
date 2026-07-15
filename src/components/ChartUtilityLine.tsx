@@ -84,8 +84,8 @@ const ChartUtilityLine = () => {
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
-  const new_chartIconSize = chartPanelwidth * 0.07;
-  const new_axisFontSize = chartPanelwidth * 0.036;
+  const new_chartIconSize = chartPanelwidth * 0.06;
+  const new_axisFontSize = chartPanelwidth * 0.03;
 
   // Utility point
   useEffect(() => {
@@ -177,7 +177,7 @@ const ChartUtilityLine = () => {
         id={chartID}
         style={{
           // width: "23vw",
-          height: "30vh",
+          height: "32vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginRight: "15px",
