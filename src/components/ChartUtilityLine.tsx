@@ -1,27 +1,28 @@
 import { useEffect, useRef, useState, use } from "react";
-import {
-  chartstack_utill,
-  queryc_utill,
-  utilityLineLayer,
-  utilityLineLayer1,
-} from "../layers";
+import { utilityLineLayer, utilityLineLayer1 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import {
-  utility_statusField,
-  utility_typeField,
-  utilityStatusArray,
-  utilityTypeChart,
-  viaductStatusColorForChart,
-} from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import { queryDefinitionExpression } from "../queryDefinition";
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import { legendSetter, rootSetter } from "../chartSetter";
-import { stackColumnsChartData } from "../query";
+import {
+  makeQuery,
+  stackColumnChartData,
+  stackColumnChartRender,
+} from "../query";
 import ChartStackColumnRender from "chart-stack-column-render";
+import {
+  cp_f,
+  util_status_f,
+  util_status_q,
+  util_type_f,
+  util_types,
+  viastatus_q,
+} from "../uniqueValues";
+import ChartStackColumns from "chart-stack-column";
 
 // Draw chart
 const ChartUtilityLine = () => {
@@ -29,24 +30,27 @@ const ChartUtilityLine = () => {
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const { cpackage, updateUtilityLinestats } = use(MyContext);
 
-  const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, utility_statusField, utilityLineLayer],
-    queryFn: async () => {
-      queryc_utill.qValues = [cpackage === "All" ? undefined : cpackage];
+  //--- Query Expression
+  const qV = [cpackage === "All" ? undefined : cpackage];
+  const qF = [cp_f];
+  const queryc_utill = makeQuery(qV, qF);
 
+  const { data, isLoading } = useQuery<ChartResponse | any>({
+    queryKey: [cpackage, util_status_f, utilityLineLayer],
+    queryFn: async () => {
       queryDefinitionExpression({
         queryExpression: queryc_utill.queryExpression(),
         featureLayer: [utilityLineLayer, utilityLineLayer1],
       });
 
       //--- chart data
-      const chartData = await stackColumnsChartData({
-        stackchart: chartstack_utill,
+      const chartData = await stackColumnChartData({
+        colchart: new ChartStackColumns(),
         qChart: queryc_utill,
-        categoryTypes: utilityTypeChart,
-        categoryTypeField: utility_typeField,
+        categoryTypes: util_types,
+        categoryTypeField: util_type_f,
         layers: [utilityLineLayer],
-        statusField: utility_statusField,
+        statusField: util_status_f,
         statusState: [0, 2, 3, 1],
       });
 
@@ -117,33 +121,34 @@ const ChartUtilityLine = () => {
     });
     legendRef.current = legend;
 
-    const crender = new ChartStackColumnRender(
-      false,
-      [utilityLineLayer, utilityLineLayer1],
+    // chart renderer
+    stackColumnChartRender({
+      render: new ChartStackColumnRender(),
+      revit: false,
+      layers: [utilityLineLayer, utilityLineLayer1],
       root,
       chart,
-      chartData,
-      undefined,
-      queryc_utill,
-      utilityTypeChart,
-      utility_typeField,
-      ["Completed", "To be Constructed"],
-      ["comp", "incomp"],
-      utilityStatusArray,
-      utility_statusField,
-      viaductStatusColorForChart,
-      chartBorderLineColor,
-      chartBorderLineWidth,
-      arcgisScene?.view,
-      undefined,
+      data: chartData,
+      buildingLayer: undefined,
+      qChart: queryc_utill,
+      chartCategoryTypes: util_types,
+      chartCategoryTypeField: util_type_f,
+      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
+      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      statusArray: util_status_q,
+      statusField: util_status_f,
+      seriesStatusColor: viastatus_q.map((c: any) => c.color),
+      strokeColor: chartBorderLineColor,
+      strokeWidth: chartBorderLineWidth,
+      view: arcgisScene?.view,
+      setLayerViewFilter: undefined,
       new_chartIconSize,
       new_axisFontSize,
       chartIconPositionX,
       chartPaddingRightIconLabel,
       legend,
-      setChartPanelwidth,
-    );
-    crender.chartRendererColumn();
+      updateChartPanelwidth: setChartPanelwidth,
+    });
 
     return () => {
       root.dispose();

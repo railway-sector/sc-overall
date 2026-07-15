@@ -1,35 +1,33 @@
 import { useEffect, useRef, useState, use } from "react";
-import {
-  chartstack_utilp,
-  queryc_utilp,
-  utilityPointLayer,
-  utilityPointLayer1,
-} from "../layers";
+import { utilityPointLayer, utilityPointLayer1 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import {
   dateUpdate,
-  stackColumnsChartData,
+  makeQuery,
+  stackColumnChartData,
+  stackColumnChartRender,
   thousands_separators,
 } from "../query";
 import {
+  cp_f,
+  monitorLists,
   primaryLabelColor,
-  updatedDateCategoryNames,
-  utility_statusField,
-  utility_typeField,
-  utilityStatusArray,
-  utilityTypeChart,
+  util_status_f,
+  util_status_q,
+  util_type_f,
+  util_types,
   valueLabelColor,
-  viaductStatusColorForChart,
+  viastatus_q,
 } from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import { queryDefinitionExpression } from "../queryDefinition";
 import { legendSetter, rootSetter } from "../chartSetter";
-import { dateDisplayKeys } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
-import type { DisplayDates, ChartResponse } from "../interfaceKeys";
+import type { ChartResponse } from "../interfaceKeys";
 import ChartStackColumnRender from "chart-stack-column-render";
+import ChartStackColumns from "chart-stack-column";
 
 // Draw chart
 const ChartUtilityPoint = () => {
@@ -37,42 +35,35 @@ const ChartUtilityPoint = () => {
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const { cpackage, utilityLinestats } = use(MyContext);
 
-  //--- 0. As of date
-  const { data: dates } = useQuery<DisplayDates | any>({
-    queryKey: [dateDisplayKeys.selected, updatedDateCategoryNames[3]],
-    queryFn: () => dateUpdate(updatedDateCategoryNames[3]),
-    select: (response) => {
-      return {
-        asOfDate: response[0][0],
-        daysPass: response[0][1],
-      };
-    },
+  //--- As of date
+  const { data: date } = useQuery<any>({
+    queryKey: ["As_Of_Date"],
+    queryFn: () => dateUpdate(monitorLists[3]),
     staleTime: Infinity,
   });
+  const asofdate = date ?? "";
+
+  //--- Query Expression
+  const qV = [cpackage === "All" ? undefined : cpackage];
+  const qF = [cp_f];
+  const queryc_utilp = makeQuery(qV, qF);
 
   const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [
-      cpackage,
-      utility_statusField,
-      utilityPointLayer,
-      utilityLinestats,
-    ],
+    queryKey: [cpackage, util_status_f, utilityPointLayer, utilityLinestats],
     queryFn: async () => {
-      queryc_utilp.qValues = [cpackage === "All" ? undefined : cpackage];
-
       queryDefinitionExpression({
         queryExpression: queryc_utilp.queryExpression(),
         featureLayer: [utilityPointLayer, utilityPointLayer1],
       });
 
       //--- chart data
-      const chartData = await stackColumnsChartData({
-        stackchart: chartstack_utilp,
+      const chartData = await stackColumnChartData({
+        colchart: new ChartStackColumns(),
         qChart: queryc_utilp,
-        categoryTypes: utilityTypeChart,
-        categoryTypeField: utility_typeField,
+        categoryTypes: util_types,
+        categoryTypeField: util_type_f,
         layers: [utilityPointLayer],
-        statusField: utility_statusField,
+        statusField: util_status_f,
         statusState: [0, 2, 3, 1],
       });
 
@@ -155,33 +146,34 @@ const ChartUtilityPoint = () => {
     });
     legendRef.current = legend;
 
-    const crender = new ChartStackColumnRender(
-      false,
-      [utilityPointLayer, utilityPointLayer1],
+    stackColumnChartRender({
+      render: new ChartStackColumnRender(),
+      revit: false,
+      layers: [utilityPointLayer, utilityPointLayer1],
       root,
       chart,
-      chartData,
-      undefined,
-      queryc_utilp,
-      utilityTypeChart,
-      utility_typeField,
-      ["Completed", "To be Constructed"],
-      ["comp", "incomp"],
-      utilityStatusArray,
-      utility_statusField,
-      viaductStatusColorForChart,
-      chartBorderLineColor,
-      chartBorderLineWidth,
-      arcgisScene?.view,
-      undefined,
+      data: chartData,
+      buildingLayer: undefined,
+      qChart: queryc_utilp,
+      chartCategoryTypes: util_types,
+      chartCategoryTypeField: util_type_f,
+      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
+      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      statusArray: util_status_q,
+      statusField: util_status_f,
+      seriesStatusColor: viastatus_q.map((c: any) => c.color),
+      strokeColor: chartBorderLineColor,
+      strokeWidth: chartBorderLineWidth,
+      view: arcgisScene?.view,
+      setLayerViewFilter: undefined,
       new_chartIconSize,
       new_axisFontSize,
       chartIconPositionX,
       chartPaddingRightIconLabel,
       legend,
-      setChartPanelwidth,
-    );
-    crender.chartRendererColumn();
+      updateChartPanelwidth: setChartPanelwidth,
+    });
+
     return () => {
       root.dispose();
     };
@@ -235,13 +227,13 @@ const ChartUtilityPoint = () => {
 
       <div
         style={{
-          color: dates?.daysPass === true ? "red" : "gray",
+          color: "gray",
           fontSize: `${new_asofDateSize}px`,
           float: "right",
           marginRight: "15px",
         }}
       >
-        {!dates?.asOfDate ? "" : "As of " + dates?.asOfDate}
+        {asofdate ? `As of ${asofdate}` : `As of `}
       </div>
 
       <div

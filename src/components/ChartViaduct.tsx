@@ -1,33 +1,33 @@
 /* eslint-disable react-hooks/immutability */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useEffect, useRef, useState, use } from "react";
-import {
-  chartstack_via,
-  pierAccessLayer,
-  queryc_via,
-  viaductLayer,
-} from "../layers";
+import { pierAccessLayer, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import "@esri/calcite-components/dist/components/calcite-panel";
 import "@esri/calcite-components/dist/components/calcite-button";
 import { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
-import {
-  status_field,
-  type_field,
-  updatedDateCategoryNames,
-  viaductStatusColorForChart,
-  viaStatusArray,
-  viatypes,
-} from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryDefinition";
 import { legendSetter, rootSetter } from "../chartSetter";
-import { dateDisplayKeys } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
-import type { DisplayDates, ChartResponse } from "../interfaceKeys";
-import { dateUpdate, stackColumnsChartData } from "../query";
+import type { ChartResponse } from "../interfaceKeys";
+import {
+  dateUpdate,
+  makeQuery,
+  stackColumnChartData,
+  stackColumnChartRender,
+} from "../query";
 import ChartStackColumnRender from "chart-stack-column-render";
+import {
+  cp_f,
+  monitorLists,
+  via_status_f,
+  via_type_f,
+  viastatus_q,
+  viatypes_q,
+} from "../uniqueValues";
+import ChartStackColumns from "chart-stack-column";
 
 // Draw chart
 const ChartViaduct = () => {
@@ -38,37 +38,34 @@ const ChartViaduct = () => {
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "viaduct-bar";
 
-  // --- 0. As of date
-  const { data: dates } = useQuery<DisplayDates | any>({
-    queryKey: [dateDisplayKeys.selected, updatedDateCategoryNames[5]],
-    queryFn: () => dateUpdate(updatedDateCategoryNames[5]),
-    select: (response) => {
-      return {
-        asOfDate: response[0][0],
-        daysPass: response[0][1],
-      };
-    },
+  const { data: date } = useQuery<any>({
+    queryKey: ["As_Of_Date"],
+    queryFn: () => dateUpdate(monitorLists[5]),
     staleTime: Infinity,
   });
+  const asofdate = date ?? "";
+
+  //--- Query Expression
+  const qV = [cpackage === "All" ? undefined : cpackage];
+  const qF = [cp_f];
+  const queryc_via = makeQuery(qV, qF);
 
   const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, status_field, viaductLayer],
+    queryKey: [cpackage, via_status_f, viaductLayer],
     queryFn: async () => {
-      queryc_via.qValues = [cpackage === "All" ? undefined : cpackage];
-
       queryDefinitionExpression({
         queryExpression: queryc_via.queryExpression(),
         featureLayer: [pierAccessLayer, viaductLayer],
       });
 
       //--- chart data
-      const chartData = await stackColumnsChartData({
-        stackchart: chartstack_via,
+      const chartData = await stackColumnChartData({
+        colchart: new ChartStackColumns(),
         qChart: queryc_via,
-        categoryTypes: viatypes,
-        categoryTypeField: type_field,
+        categoryTypes: viatypes_q,
+        categoryTypeField: via_type_f,
         layers: [viaductLayer],
-        statusField: status_field,
+        statusField: via_status_f,
         statusState: [1, 2, 3, 4],
       });
 
@@ -139,33 +136,34 @@ const ChartViaduct = () => {
     });
     legendRef.current = legend;
 
-    const crender = new ChartStackColumnRender(
-      false,
-      [viaductLayer],
+    //--- Chart renderer
+    stackColumnChartRender({
+      render: new ChartStackColumnRender(),
+      revit: false,
+      layers: [viaductLayer],
       root,
       chart,
-      chartData,
-      undefined,
-      queryc_via,
-      viatypes,
-      type_field,
-      ["Completed", "To be Constructed"],
-      ["comp", "incomp"],
-      viaStatusArray,
-      status_field,
-      viaductStatusColorForChart,
-      chartBorderLineColor,
-      chartBorderLineWidth,
-      arcgisScene?.view,
-      undefined,
+      data: chartData,
+      buildingLayer: undefined,
+      qChart: queryc_via,
+      chartCategoryTypes: viatypes_q,
+      chartCategoryTypeField: via_type_f,
+      statusTypename: ["Completed", "To be Constructed", "Under Construction"], //["Completed", "To be Constructed", "Under Construction"],
+      statusStatename: ["comp", "incomp", "ongoing"], //["comp", "incomp", "ongoing"],
+      statusArray: viastatus_q,
+      statusField: via_status_f,
+      seriesStatusColor: viastatus_q.map((c: any) => c.color),
+      strokeColor: chartBorderLineColor,
+      strokeWidth: chartBorderLineWidth,
+      view: arcgisScene?.view,
+      setLayerViewFilter: undefined,
       new_chartIconSize,
       new_axisFontSize,
       chartIconPositionX,
       chartPaddingRightIconLabel,
       legend,
-      setChartPanelwidth,
-    );
-    crender.chartRendererColumn();
+      updateChartPanelwidth: setChartPanelwidth,
+    });
 
     return () => {
       root.dispose();
@@ -221,13 +219,13 @@ const ChartViaduct = () => {
 
       <div
         style={{
-          color: dates?.daysPass === true ? "red" : "gray",
+          color: "gray",
           fontSize: `${new_asofDateSize}px`,
           float: "right",
           marginRight: "15px",
         }}
       >
-        {!dates?.asOfDate ? "" : "As of " + dates?.asOfDate}
+        {asofdate ? `As of ${asofdate}` : `As of `}
       </div>
 
       <div

@@ -2,11 +2,7 @@ import { useEffect, memo } from "react";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import { handedOverAreaByContractp } from "../query";
-import {
-  affectedAreaField,
-  cp_list,
-  lotHandedOverAreaField,
-} from "../uniqueValues";
+import { lot_aa_f, cpackages, lot_hoa_f } from "../uniqueValues";
 import { rootSetter } from "../chartSetter";
 import { useQuery } from "@tanstack/react-query";
 import { lotLayer } from "../layers";
@@ -15,12 +11,12 @@ const HandedOverAreaChart = memo(() => {
   const chartID = "lot-handedover";
 
   const { data, isLoading } = useQuery<any>({
-    queryKey: [lotLayer, affectedAreaField, lotHandedOverAreaField],
+    queryKey: [lotLayer, lot_aa_f, lot_hoa_f],
     queryFn: async () => {
       const chartData = await handedOverAreaByContractp({
-        aa_field: affectedAreaField,
-        hoa_field: lotHandedOverAreaField,
-        cp_list: cp_list,
+        aa_field: lot_aa_f,
+        hoa_field: lot_hoa_f,
+        cp_list: cpackages.filter((pkg) => pkg !== "All"),
         layer: lotLayer,
       });
 

@@ -4,9 +4,11 @@
 
 import { dateTable } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
-import { handedOverLotField, cpField, lotStatusField } from "./uniqueValues";
-import type { statisticsType } from "./uniqueValues";
+import { lot_ho_f, cp_f, lot_status_f } from "./uniqueValues";
+import type { statisticsType } from "./interfaceKeys";
 import Query from "@arcgis/core/rest/support/Query";
+import QueryExpressionLayers from "query-layers-expression";
+import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 
 //---------------------------------------------------------//
 //                 Add Layers to Map                      //
@@ -20,44 +22,33 @@ export function addLayersToMap(map: any, layersList: any[]) {
 //--------------------------------//
 //    As of Date function         //
 //--------------------------------//
-// get last date of month
-export function lastDateOfMonth(date: Date) {
-  const old_date = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  const year = old_date.getFullYear();
-  const month = old_date.getMonth() + 1;
-  const day = old_date.getDate();
-  const final_date = `${year}-${month}-${day}`;
-
-  return final_date;
+export function yearMonthDay(date: Date) {
+  return {
+    year: date?.getFullYear() ?? 0,
+    month: date?.getMonth() + 1,
+    day: date?.getDate(),
+  };
 }
 
-// Updat date
-export async function dateUpdate(category: any) {
+export function toAsofdate(date: Date) {
+  //--- Return displayed date: (as of date)
+  const { year, day } = yearMonthDay(date);
+  const cmonth = date?.toLocaleString("en-US", { month: "long" });
+
+  return year <= 1970 ? "" : `${cmonth} ${day}, ${year}`;
+}
+
+export async function dateUpdate(category: string) {
+  //--- Only executed during an initial render
   const query = dateTable.createQuery();
-  const queryExpression =
-    "project = 'SC'" + " AND " + "category = '" + category + "'";
-  query.where = queryExpression; // "project = 'N2'" + ' AND ' + "category = 'Land Acquisition'";
+  query.where = `project = 'SC' AND category = '${category}'`;
 
-  return dateTable.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const dates = stats.map((result: any) => {
-      // get today and date recorded in the table
-      const today = new Date();
-      const date = new Date(result.attributes.date);
+  const { features } = await dateTable.queryFeatures(query);
+  return features.map(({ attributes }: any) => {
+    const date = new Date(attributes.date);
+    const asofdate = toAsofdate(date);
 
-      // Calculate the number of days passed since the last update
-      const time_passed = today.getTime() - date.getTime();
-      const days_passed = Math.round(time_passed / (1000 * 3600 * 24));
-
-      const year = date.getFullYear();
-      const month = date.toLocaleString("en-US", {
-        month: "long",
-      });
-      const day = date.getDate();
-      const as_of_date = year < 1990 ? "" : `${month} ${day}, ${year}`;
-      return [as_of_date, days_passed, date];
-    });
-    return dates;
+    return asofdate;
   });
 }
 
@@ -122,11 +113,99 @@ export async function fieldStatistic({
   });
 }
 
+//--- Chart Render helper function
+// `pieChartRender` function helps to assign parameter names to class `ChartPieSeriesRender`
+interface PieChartRenderType {
+  render: any | null; // the first instance of new ChartPieSeriesRender
+  chart: any; // amChart
+  pieSeries: any;
+  legend: any;
+  root: any;
+  qChart: any;
+  q2Expression?: any;
+  status_field: any;
+  view: any;
+  updateChartPanelwidth: any;
+  data: any;
+  seriesScale: any;
+  innerLabel?: any;
+  innerLabelFontSize?: any;
+  innerValueFontSize?: any;
+  layer: FeatureLayer | any;
+  statusArray: StatusQueryItem[];
+  bkg_color_switch?: boolean;
+  seriesFillHash?: boolean;
+}
+
+interface StatusQueryItem {
+  category: string;
+  value: number | string;
+  color: string;
+}
+
+export async function PieChartRenderType({
+  render,
+  chart,
+  pieSeries,
+  legend,
+  root,
+  qChart,
+  q2Expression,
+  status_field,
+  view,
+  updateChartPanelwidth,
+  data,
+  seriesScale,
+  innerLabel,
+  innerLabelFontSize,
+  innerValueFontSize,
+  layer,
+  statusArray,
+  bkg_color_switch,
+  seriesFillHash,
+}: PieChartRenderType) {
+  render.chart = chart;
+  render.pieSeries = pieSeries;
+  render.legend = legend;
+  render.root = root;
+  render.qChart = qChart;
+  render.q2Expression = q2Expression;
+  render.status_field = status_field;
+  render.view = view;
+  render.updateChartPanelwidth = updateChartPanelwidth;
+  render.data = data;
+  render.seriesScale = seriesScale;
+  render.innerLabel = innerLabel;
+  render.innerLabelFontSize = innerLabelFontSize;
+  render.innerValueFontSize = innerValueFontSize;
+  render.layer = layer;
+  render.statusArray = statusArray;
+  render.bkg_color_switch = bkg_color_switch;
+  render.seriesFillHash = seriesFillHash;
+
+  return await render.chartDataRenderer();
+}
+
+//--- Returns query expression
+export const makeQuery = (
+  qValues: string[],
+  qFields: string[],
+  qExpression?: string,
+  q2Expression?: string,
+) => {
+  const q = new QueryExpressionLayers();
+  q.qValues = qValues;
+  q.qFields = qFields;
+  if (qExpression) q.qExpression = qExpression;
+  if (q2Expression) q.q2Expression = q2Expression;
+  return q;
+};
+
 //---------------------------------------------//
 //               Stack Columns                 //
 //---------------------------------------------//
-interface stackColumnsDataType {
-  stackchart: any;
+interface StackColumnChartDataType {
+  colchart: any;
   qChart: any;
   categoryTypes: any;
   categoryTypeField: any;
@@ -135,23 +214,122 @@ interface stackColumnsDataType {
   statusState: any;
 }
 
-export async function stackColumnsChartData({
-  stackchart,
+export async function stackColumnChartData({
+  colchart,
   qChart,
   categoryTypes,
   categoryTypeField,
   layers,
   statusField,
   statusState,
-}: stackColumnsDataType) {
-  stackchart.qChart = qChart.queryExpression();
-  stackchart.categoryTypes = categoryTypes;
-  stackchart.categoryTypeField = categoryTypeField;
-  stackchart.layers = layers;
-  stackchart.statusField = statusField;
-  stackchart.statusState = statusState;
+}: StackColumnChartDataType) {
+  colchart.qChart = qChart.queryExpression();
+  colchart.categoryTypes = categoryTypes;
+  colchart.categoryTypeField = categoryTypeField;
+  colchart.layers = layers;
+  colchart.statusField = statusField;
+  colchart.statusState = statusState;
 
-  return await stackchart.chartDataStackColumns();
+  return await colchart.chartDataStackColumns();
+}
+
+type StatusTypeNamesType =
+  | "To be Constructed"
+  | "Under Construction"
+  | "delayed"
+  | "Completed"
+  | "Exceeded"
+  | "Normal";
+
+type StatusStateType =
+  | "comp"
+  | "incomp"
+  | "ongoing"
+  | "delayed"
+  | "exceeded"
+  | "normal";
+
+interface ChartStackColumnRender {
+  render: any;
+  revit: boolean;
+  layers: any;
+  root: any;
+  chart: any;
+  data: any;
+  buildingLayer?: any;
+  qChart: any;
+  chartCategoryTypes: any;
+  chartCategoryTypeField: any;
+  statusTypename: StatusTypeNamesType[];
+  statusStatename: StatusStateType[];
+  statusArray: any;
+  statusField: any;
+  seriesStatusColor: any;
+  strokeColor: any;
+  strokeWidth: any;
+  view: any;
+  setLayerViewFilter?: any;
+  new_chartIconSize: any;
+  new_axisFontSize: any;
+  chartIconPositionX?: any;
+  chartPaddingRightIconLabel: any;
+  legend: any;
+  updateChartPanelwidth: any;
+}
+
+export async function stackColumnChartRender({
+  render,
+  revit,
+  layers,
+  root,
+  chart,
+  data,
+  buildingLayer,
+  qChart,
+  chartCategoryTypes,
+  chartCategoryTypeField,
+  statusTypename,
+  statusStatename,
+  statusArray,
+  statusField,
+  seriesStatusColor,
+  strokeColor,
+  strokeWidth,
+  view,
+  setLayerViewFilter,
+  new_chartIconSize,
+  new_axisFontSize,
+  chartIconPositionX,
+  chartPaddingRightIconLabel,
+  legend,
+  updateChartPanelwidth,
+}: ChartStackColumnRender) {
+  render.revit = revit;
+  render.layers = layers;
+  render.root = root;
+  render.chart = chart;
+  render.data = data;
+  render.buildingLayer = buildingLayer;
+  render.qChart = qChart;
+  render.chartCategoryTypes = chartCategoryTypes;
+  render.chartCategoryTypeField = chartCategoryTypeField;
+  render.statusTypename = statusTypename;
+  render.statusStatename = statusStatename;
+  render.statusArray = statusArray;
+  render.statusField = statusField;
+  render.seriesStatusColor = seriesStatusColor;
+  render.strokeColor = strokeColor;
+  render.strokeWidth = strokeWidth;
+  render.view = view;
+  render.setLayerViewFilter = setLayerViewFilter;
+  render.new_chartIconSize = new_chartIconSize;
+  render.new_axisFontSize = new_axisFontSize;
+  render.chartIconPositionX = chartIconPositionX;
+  render.chartPaddingRightIconLabel = chartPaddingRightIconLabel;
+  render.legend = legend;
+  render.updateChartPanelwidth = updateChartPanelwidth;
+
+  return await render.chartRendererColumn();
 }
 
 //---------------------------------------------//
@@ -184,7 +362,7 @@ export async function handedOverAreaByContractp({
       });
 
       const query = layer.createQuery();
-      query.where = `CP = '${cp}' AND ${cpField} IS NOT NULL`;
+      query.where = `CP = '${cp}' AND ${cp_f} IS NOT NULL`;
       query.outStatistics = [aa, hoa];
 
       const response = await layer?.queryFeatures(query);
@@ -199,30 +377,30 @@ export async function handedOverAreaByContractp({
   );
 }
 
-export const dateFormat = (inputDate: any, format: any) => {
-  //parse the input date
-  const date = new Date(inputDate);
+// export const dateFormat = (inputDate: any, format: any) => {
+//   //parse the input date
+//   const date = new Date(inputDate);
 
-  //extract the parts of the date
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
+//   //extract the parts of the date
+//   const day = date.getDate();
+//   const month = date.getMonth() + 1;
+//   const year = date.getFullYear();
 
-  //replace the month
-  format = format.replace("MM", month.toString().padStart(2, "0"));
+//   //replace the month
+//   format = format.replace("MM", month.toString().padStart(2, "0"));
 
-  //replace the year
-  if (format.indexOf("yyyy") > -1) {
-    format = format.replace("yyyy", year.toString());
-  } else if (format.indexOf("yy") > -1) {
-    format = format.replace("yy", year.toString().substr(2, 2));
-  }
+//   //replace the year
+//   if (format.indexOf("yyyy") > -1) {
+//     format = format.replace("yyyy", year.toString());
+//   } else if (format.indexOf("yy") > -1) {
+//     format = format.replace("yy", year.toString().substr(2, 2));
+//   }
 
-  //replace the day
-  format = format.replace("dd", day.toString().padStart(2, "0"));
+//   //replace the day
+//   format = format.replace("dd", day.toString().padStart(2, "0"));
 
-  return format;
-};
+//   return format;
+// };
 
 //---------------------------------------------//
 //                  Highlight Lot              //
@@ -248,7 +426,7 @@ export function highlightRemove() {
 
 export async function highlightHandedOverLot(layer: any, view: any) {
   const query = layer.createQuery();
-  query.where = `${handedOverLotField} = 1 AND ${lotStatusField} <> 8`;
+  query.where = `${lot_ho_f} = 1 AND ${lot_status_f} <> 8`;
 
   const layerView = view?.whenLayerView(layer);
   const results = await layer?.queryObjectIds(query);
@@ -271,19 +449,25 @@ export function thousands_separators(num: any) {
     return 0;
   }
 }
-// Zoom to Layer
+
+//--- Zoom to Layer
 // const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
 export function zoomToLayer(layer: any, view: any) {
   return layer.queryExtent().then((response: any) => {
-    view
-      ?.goTo(response.extent, {
-        //response.extent
-        speedFactor: 2,
-      })
-      .catch((error: any) => {
-        if (error.name !== "AbortError") {
-          console.error(error);
-        }
-      });
+    view?.goTo(response.extent, { speedFactor: 2 }).catch((error: any) => {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    });
   });
+}
+
+//--- Zoom to fullExtet
+export function zoomToFullExtent(layer: any, view: any) {
+  layer.fullExtent &&
+    view?.goTo(layer.fullExtent).catch((error: any) => {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    });
 }
