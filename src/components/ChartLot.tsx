@@ -44,6 +44,7 @@ import { queryDefinitionExpression } from "../queryDefinition";
 const ChartLot = () => {
   const { cpackage } = use(MyContext);
   const arcgisScene = document.querySelector("arcgis-scene");
+  const firstLoad = useRef<boolean>(true);
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const [handedOverCheckBox, setHandedOverCheckBox] = useState<any>(false);
 
@@ -61,7 +62,6 @@ const ChartLot = () => {
 
   const queryc_lot = makeQuery(qV, qF);
   const queryc_lot2 = makeQuery(qV, qF, `${lot_status_f} <> 8`);
-  const queryc_lot3 = makeQuery(qV, qF, `${lot_status_f} >= 1`);
 
   //--- Generate chart data
   const { data, isLoading } = useQuery<ChartResponse | any>({
@@ -79,7 +79,6 @@ const ChartLot = () => {
         total_affected_area,
         total_ho_area,
         total_ho_lot,
-        affected_area_pie,
       ] = await Promise.all([
         //--- Chart data
         pieChartData({
@@ -123,17 +122,6 @@ const ChartLot = () => {
           statisticField: lot_ho_f,
           statisticType: "sum",
         }),
-
-        //--- Affected are for each status
-        pieChartData({
-          piechart: new ChartPieSeries(),
-          qChart: queryc_lot3,
-          layer: lotLayer,
-          statusList: lot_status_q,
-          statusField: lot_status_f,
-          statisticField: lot_aa_f,
-          statisticType: "sum",
-        }),
       ]);
 
       //--- Handed-Over percent
@@ -141,7 +129,11 @@ const ChartLot = () => {
         ((total_ho_lot / totaln) * 100).toFixed(0),
       );
 
-      zoomToLayer(lotLayer, arcgisScene);
+      //--- Only zoom on subsequent (non-initial) fetches
+      if (!firstLoad.current) {
+        zoomToLayer(lotLayer, arcgisScene);
+      }
+      firstLoad.current = false;
 
       return {
         chartData: chartData[0] || [],
@@ -149,7 +141,6 @@ const ChartLot = () => {
         total_aa: total_affected_area,
         total_hoa: total_ho_area,
         total_ho: total_ho_lot,
-        aa_pie: affected_area_pie[0] || [],
         total_hop: handedover_percent,
       };
     },
@@ -165,7 +156,6 @@ const ChartLot = () => {
   const total_ho = data?.total_ho || 0;
   const total_hop = data?.total_hop || 0;
   const total_hoa = data?.total_hoa || 0;
-  const aa_pie = data?.aa_pie || [];
 
   // ************************************
   //  Chart
@@ -243,7 +233,7 @@ const ChartLot = () => {
     return () => {
       root.dispose();
     };
-  }, [chartID, chartData, aa_pie]);
+  }, [chartID, chartData]);
 
   useEffect(() => {
     pieSeriesRef.current?.data.setAll(chartData);

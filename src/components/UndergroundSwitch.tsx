@@ -1,9 +1,9 @@
 import "../index.css";
 import "@esri/calcite-components/components/calcite-switch";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
 
-function UndergroundSwitch() {
+const UndergroundSwitch = memo(() => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [underground, setUnderground] = useState(false);
 
@@ -44,6 +44,6 @@ function UndergroundSwitch() {
       </div>
     </>
   );
-}
+});
 
 export default UndergroundSwitch;
