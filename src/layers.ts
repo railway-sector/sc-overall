@@ -14,6 +14,7 @@ import {
   via_renderer,
   via_popup,
   prow506_renderer,
+  util_minScale,
 } from "./uniqueValues";
 
 import {
@@ -566,6 +567,7 @@ export const utilityPointLayer = new FeatureLayer({
     unit: "meters",
   },
   popupTemplate: util_popup,
+  minScale: util_minScale,
 });
 
 //--- UTILITY POINT LAYER 2 (Point Status) ---//
@@ -581,6 +583,7 @@ export const utilityPointLayer1 = new FeatureLayer({
   },
   labelingInfo: [utilp2_label],
   popupTemplate: util_popup,
+  minScale: util_minScale,
 });
 
 //--- UTILITY LINE LAYER 1 (LINE SYMBOL) ---//
@@ -595,6 +598,7 @@ export const utilityLineLayer = new FeatureLayer({
   },
   renderer: utilLineRenderer(),
   popupTemplate: util_popup,
+  minScale: util_minScale,
 });
 
 //--- UTILITY LINE LAYER 2 (LINE STATUS) ---//
@@ -610,6 +614,7 @@ export const utilityLineLayer1 = new FeatureLayer({
   renderer: utilp2_renderer,
   labelingInfo: [utill2_line_label],
   popupTemplate: util_popup,
+  minScale: util_minScale,
 });
 
 export const utilityGroupLayer = new GroupLayer({
