@@ -24,15 +24,16 @@ import {
   viaductLayer,
   pierHeadColumnLayer,
   sources,
-  // maintenanceRoadLayer,
 } from "../layers";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { addLayersToMap } from "../query";
+import { useState } from "react";
 
 export default function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
+  const [_mapView, setMapView] = useState<any>();
 
   reactiveUtils.watch(
     () => viaductLayer.visible,
@@ -60,7 +61,6 @@ export default function MapDisplay() {
       stationLayer,
       somco_fense_layer,
       handedOverLotLayer,
-      // maintenanceRoadLayer,
     ]);
 
     arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
@@ -84,6 +84,9 @@ export default function MapDisplay() {
         viewingMode="local"
         center="121.05, 14.4"
         zoom={12}
+        onarcgisViewReadyChange={(event: any) => {
+          setMapView(event.target);
+        }}
       >
         <arcgis-compass slot="top-right"></arcgis-compass>
         <arcgis-expand close-on-esc slot="top-right" mode="floating">

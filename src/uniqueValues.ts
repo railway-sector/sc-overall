@@ -29,15 +29,10 @@ import { toAsofdate, yearMonthDay } from "./query";
 //----------------------------------------------//
 //              portalItem                      //
 //----------------------------------------------//
-const portalItem_url = {
-  url: "https://gis.railway-sector.com/portal",
-};
+const portalItem_url = { url: "https://gis.railway-sector.com/portal" };
 
 export const portalItems = (id: any) => {
-  return {
-    id: id,
-    portal: portalItem_url,
-  };
+  return { id: id, portal: portalItem_url };
 };
 
 export const cpackages = [
@@ -134,29 +129,21 @@ export const lot_label = new LabelClass({
     color: "black",
     haloColor: "white",
     haloSize: 0.5,
-    font: {
-      size: 11,
-      weight: "bold",
-    },
+    font: { size: 11, weight: "bold" },
   },
 });
 
 export const lot_symbol = new SimpleFillSymbol({
   color: [0, 0, 0, 0],
   style: "solid",
-  outline: {
-    color: [110, 110, 110],
-    width: 0.7,
-  },
+  outline: { color: [110, 110, 110], width: 0.7 },
 });
 
 export const lot_uniqueV = lot_status_q.map((item: any) => {
   return Object.assign({
     value: item.value,
     label: item.category,
-    symbol: new SimpleFillSymbol({
-      color: item.color,
-    }),
+    symbol: new SimpleFillSymbol({ color: item.color }),
   });
 });
 
@@ -256,10 +243,7 @@ export const lot_ho_renderer = new UniqueValueRenderer({
       label: "Handed-Over",
       symbol: new SimpleFillSymbol({
         color: [0, 255, 255, 0.3],
-        outline: new SimpleLineSymbol({
-          color: "#00ffff",
-          width: "4px",
-        }),
+        outline: new SimpleLineSymbol({ color: "#00ffff", width: "4px" }),
       }),
     },
   ],
@@ -270,11 +254,7 @@ export const lot_opt_renderer = new SimpleRenderer({
   symbol: new SimpleFillSymbol({
     color: "#bbbbbb",
     style: "diagonal-cross",
-    outline: {
-      // autocasts as new SimpleLineSymbol()
-      color: "#FF5733", // [0, 255, 255, 1],
-      width: "6px",
-    },
+    outline: { color: "#FF5733", width: "6px" },
   }),
 });
 
@@ -283,11 +263,7 @@ export const lot_studied_renderer = new SimpleRenderer({
   symbol: new SimpleFillSymbol({
     color: "#808080",
     style: "horizontal",
-    outline: {
-      // autocasts as new SimpleLineSymbol()
-      color: "#808080", //#DF73FF,
-      width: "6px",
-    },
+    outline: { color: "#808080", width: "6px" },
   }),
 });
 
@@ -300,10 +276,7 @@ export const lot_tunnel_renderer = new UniqueValueRenderer({
       label: "Tunnel Affected",
       symbol: new SimpleFillSymbol({
         color: [255, 0, 0, 0],
-        outline: {
-          color: "#00c5ff",
-          width: 0.3,
-        },
+        outline: { color: "#00c5ff", width: 0.3 },
       }),
     },
   ],
@@ -313,13 +286,8 @@ export const lot_tunnel_renderer = new UniqueValueRenderer({
 export const lot_access_renderer = new SimpleRenderer({
   symbol: new SimpleFillSymbol({
     color: "purple",
-    // style: 'cross',
     style: "solid",
-
-    outline: {
-      width: 1,
-      color: "black",
-    },
+    outline: { width: 1, color: "black" },
   }),
 });
 
@@ -339,6 +307,7 @@ export const rgb = [
   [255, 170, 0, 0.6],
   [255, 83, 73, 0.6],
   [178, 190, 181, 0.6],
+  [111, 0, 0, 0.6],
 ];
 
 export const str_status_q = [
@@ -374,6 +343,12 @@ export const str_status_q = [
     color: "#B2BEB5",
     colrgb: rgb[6],
   },
+  {
+    value: 8,
+    category: "For Expropriation",
+    color: "#6f0000",
+    colrgb: rgb[7],
+  },
 ];
 
 const height = 5;
@@ -383,13 +358,8 @@ const str_symbol = new PolygonSymbol3D({
   symbolLayers: [
     new ExtrudeSymbol3DLayer({
       size: 5,
-      material: {
-        color: [0, 0, 0, 0.4],
-      },
-      edges: new SolidEdges3D({
-        color: "#4E4E4E",
-        size: edgeSize,
-      }),
+      material: { color: [0, 0, 0, 0.4] },
+      edges: new SolidEdges3D({ color: "#4E4E4E", size: edgeSize }),
     }),
   ],
 });
@@ -401,13 +371,8 @@ const str_uniqueV = str_status_q.map((item: any) => {
       symbolLayers: [
         new ExtrudeSymbol3DLayer({
           size: height,
-          material: {
-            color: item.colrgb,
-          },
-          edges: new SolidEdges3D({
-            color: "#4E4E4E",
-            size: edgeSize,
-          }),
+          material: { color: item.colrgb },
+          edges: new SolidEdges3D({ color: "#4E4E4E", size: edgeSize }),
         }),
       ],
     }),
@@ -430,27 +395,12 @@ export const str_popup = {
     {
       type: "fields",
       fieldInfos: [
-        {
-          fieldName: "StrucOwner",
-          label: "Structure Owner",
-        },
-        {
-          fieldName: "Municipality",
-        },
-        {
-          fieldName: "Barangay",
-        },
-        {
-          fieldName: "StatusStruc",
-          label: "<p>Status for Structure</p>",
-        },
-        {
-          fieldName: "Name",
-        },
-        {
-          fieldName: "Status",
-          label: "Households Ownership (structure) ",
-        },
+        { fieldName: "StrucOwner", label: "Structure Owner" },
+        { fieldName: "Municipality" },
+        { fieldName: "Barangay" },
+        { fieldName: "StatusStruc", label: "<p>Status for Structure</p>" },
+        { fieldName: "Name" },
+        { fieldName: "Status", label: "Households Ownership (structure) " },
       ],
     },
   ],
@@ -470,10 +420,7 @@ export const str_uniqueV_owner = str_owner_q.map((item: any) => {
     symbol: new SimpleFillSymbol({
       style: "forward-diagonal",
       color: item.color,
-      outline: {
-        color: "#6E6E6E",
-        width: 0.3,
-      },
+      outline: { color: "#6E6E6E", width: 0.3 },
     }),
   };
 });
@@ -527,7 +474,7 @@ export const nlo_status_q = [
   {
     value: 6,
     category: "For Notice of Taking",
-    color: "#FF0000",
+    color: "#6f0000",
     logo: nlo_status_symbol[5],
   },
 ];
@@ -541,14 +488,9 @@ const nlo_uniqueV = nlo_status_q.map((item: any) => {
     symbol: new PointSymbol3D({
       symbolLayers: [
         new IconSymbol3DLayer({
-          resource: {
-            href: item.logo,
-          },
+          resource: { href: item.logo },
           size: symbolSize,
-          outline: {
-            color: "white",
-            size: 2,
-          },
+          outline: { color: "white", size: 2 },
         }),
       ],
     }),
@@ -568,27 +510,12 @@ export const nlo_popup = {
     {
       type: "fields",
       fieldInfos: [
-        {
-          fieldName: "StrucOwner",
-          label: "Structure Owner",
-        },
-        {
-          fieldName: "Municipality",
-        },
-        {
-          fieldName: "Barangay",
-        },
-        {
-          fieldName: "StatusRC",
-          label: "<p>Status for Relocation</p>",
-        },
-        {
-          fieldName: "Name",
-        },
-        {
-          fieldName: "Status",
-          label: "Households Ownership (structure) ",
-        },
+        { fieldName: "StrucOwner", label: "Structure Owner" },
+        { fieldName: "Municipality" },
+        { fieldName: "Barangay" },
+        { fieldName: "StatusRC", label: "<p>Status for Relocation</p>" },
+        { fieldName: "Name" },
+        { fieldName: "Status", label: "Households Ownership (structure) " },
       ],
     },
   ],
@@ -623,25 +550,18 @@ const str_occup_uniqueV = str_occup_q.map((item: any) => {
     symbol: new PointSymbol3D({
       symbolLayers: [
         new IconSymbol3DLayer({
-          resource: {
-            href: item.ref,
-          },
+          resource: { href: item.ref },
           size: occupancyPointSize,
-          outline: {
-            color: "white",
-            size: 2,
-          },
+          outline: { color: "white", size: 2 },
         }),
       ],
       verticalOffset: str_occup_offsetV,
 
       callout: {
-        type: "line", // autocasts as new LineCallout3D()
+        type: "line",
         color: [128, 128, 128, 0.6],
         size: 0.4,
-        border: {
-          color: "grey",
-        },
+        border: { color: "grey" },
       },
     }),
   };
@@ -660,27 +580,15 @@ export const str_occup_popup = {
     {
       type: "fields",
       fieldInfos: [
-        {
-          fieldName: "StrucOwner",
-          label: "Structure Owner",
-        },
-        {
-          fieldName: "Municipality",
-        },
-        {
-          fieldName: "Barangay",
-        },
+        { fieldName: "StrucOwner", label: "Structure Owner" },
+        { fieldName: "Municipality" },
+        { fieldName: "Barangay" },
         {
           fieldName: "Occupancy",
           label: "<p>Status for Relocation(structure)</p>",
         },
-        {
-          fieldName: "Name",
-        },
-        {
-          fieldName: "Status",
-          label: "Households Ownership",
-        },
+        { fieldName: "Name" },
+        { fieldName: "Status", label: "Households Ownership" },
       ],
     },
   ],
@@ -694,18 +602,9 @@ export const label_stationp = new LabelClass({
   symbol: new LabelSymbol3D({
     symbolLayers: [
       new TextSymbol3DLayer({
-        material: {
-          color: "#d4ff33",
-        },
+        material: { color: "#d4ff33" },
         size: 15,
-        halo: {
-          color: "black",
-          size: 0.5,
-        },
-        // font: {
-        //   family: 'Ubuntu Mono',
-        //   //weight: "bold"
-        // },
+        halo: { color: "black", size: 0.5 },
       }),
     ],
     verticalOffset: {
@@ -715,19 +614,14 @@ export const label_stationp = new LabelClass({
     },
 
     callout: {
-      type: "line", // autocasts as new LineCallout3D()
+      type: "line",
       color: [128, 128, 128, 0.5],
       size: 0.2,
-      border: {
-        color: "grey",
-      },
+      border: { color: "grey" },
     },
   }),
   labelPlacement: "above-center",
-  labelExpressionInfo: {
-    expression: "$feature.Station",
-    //value: "{TEXTSTRING}"
-  },
+  labelExpressionInfo: { expression: "$feature.Station" },
 });
 
 //--- CHAINAGE LAYER ---//
@@ -738,10 +632,7 @@ export const label_chainage = new LabelClass({
     color: [85, 255, 0],
     haloColor: "black",
     haloSize: 0.5,
-    font: {
-      size: 15,
-      weight: "bold",
-    },
+    font: { size: 15, weight: "bold" },
   },
 });
 
@@ -749,10 +640,7 @@ export const chainage_renderer = new SimpleRenderer({
   symbol: new SimpleMarkerSymbol({
     size: 5,
     color: [255, 255, 255, 0.9],
-    outline: {
-      width: 0.2,
-      color: "black",
-    },
+    outline: { width: 0.2, color: "black" },
   }),
 });
 
@@ -766,10 +654,7 @@ export const stationbox_renderer = new UniqueValueRenderer({
       symbol: new SimpleFillSymbol({
         color: [160, 160, 160],
         style: "backward-diagonal",
-        outline: {
-          width: 1,
-          color: "black",
-        },
+        outline: { width: 1, color: "black" },
       }),
     },
     {
@@ -778,11 +663,7 @@ export const stationbox_renderer = new UniqueValueRenderer({
       symbol: new SimpleFillSymbol({
         color: [104, 104, 104],
         style: "cross",
-        outline: {
-          width: 1,
-          color: "black",
-          style: "short-dash",
-        },
+        outline: { width: 1, color: "black", style: "short-dash" },
       }),
     },
     {
@@ -790,10 +671,7 @@ export const stationbox_renderer = new UniqueValueRenderer({
       label: "Station Box",
       symbol: new SimpleFillSymbol({
         color: [0, 0, 0, 0],
-        outline: {
-          width: 2,
-          color: [115, 0, 0],
-        },
+        outline: { width: 2, color: [115, 0, 0] },
       }),
     },
   ],
@@ -806,13 +684,8 @@ const pier_column_symbol = new PolygonSymbol3D({
   symbolLayers: [
     new ExtrudeSymbol3DLayer({
       size: pHeight + 10,
-      material: {
-        color: [78, 78, 78, 0.5],
-      },
-      edges: new SolidEdges3D({
-        color: "#4E4E4E",
-        size: 0.3,
-      }),
+      material: { color: [78, 78, 78, 0.5] },
+      edges: new SolidEdges3D({ color: "#4E4E4E", size: 0.3 }),
     }),
   ],
 });
@@ -821,56 +694,18 @@ const pilecap_symbol = new PolygonSymbol3D({
   symbolLayers: [
     new ExtrudeSymbol3DLayer({
       size: pHeight + 3,
-      material: {
-        color: [200, 200, 200, 0.7],
-      },
-      edges: new SolidEdges3D({
-        color: "#4E4E4E",
-        size: 1.0,
-      }),
+      material: { color: [200, 200, 200, 0.7] },
+      edges: new SolidEdges3D({ color: "#4E4E4E", size: 1.0 }),
     }),
   ],
 });
 
 export const pierhead_renderer = new UniqueValueRenderer({
-  // defaultSymbol: new PolygonSymbol3D({
-  //   symbolLayers: [
-  //     {
-  //       type: "extrude",
-  //       size: 5, // in meters
-  //       material: {
-  //         color: "#E1E1E1",
-  //       },
-  //       edges: new SolidEdges3D({
-  //         color: "#4E4E4E",
-  //         size: 1.0,
-  //       }),
-  //     },
-  //   ],
-  // }),
-  // defaultLabel: "Other",
   field: "Layer",
-  legendOptions: {
-    title: "Pile Cap/Column",
-  },
+  legendOptions: { title: "Pile Cap/Column" },
   uniqueValueInfos: [
-    {
-      value: "Pier_Column",
-      symbol: pier_column_symbol,
-      label: "Column",
-    },
-    /*
-  {
-    value: "Pier_Head",
-    symbol: pierHead,
-    label: "Pier Head"
-  },
-  */
-    {
-      value: "Pile_Cap",
-      symbol: pilecap_symbol,
-      label: "Pile Cap",
-    },
+    { value: "Pier_Column", symbol: pier_column_symbol, label: "Column" },
+    { value: "Pile_Cap", symbol: pilecap_symbol, label: "Pile Cap" },
   ],
 });
 
@@ -879,14 +714,9 @@ export const pier_access_label = new LabelClass({
   symbol: new LabelSymbol3D({
     symbolLayers: [
       new TextSymbol3DLayer({
-        material: {
-          color: valueLabelColor,
-        },
+        material: { color: valueLabelColor },
         size: 15,
-        font: {
-          family: "Ubuntu Mono",
-          weight: "bold",
-        },
+        font: { family: "Ubuntu Mono", weight: "bold" },
       }),
     ],
     verticalOffset: {
@@ -898,27 +728,16 @@ export const pier_access_label = new LabelClass({
       type: "line",
       size: 0.5,
       color: [0, 0, 0],
-      border: {
-        color: [255, 255, 255, 0.7],
-      },
+      border: { color: [255, 255, 255, 0.7] },
     },
   }),
-  labelExpressionInfo: {
-    expression: "$feature.PierNumber",
-    //'DefaultValue($feature.GeoTechName, "no data")'
-    //"IIF($feature.Score >= 13, '', '')"
-    //value: "{Type}"
-  },
+  labelExpressionInfo: { expression: "$feature.PierNumber" },
   labelPlacement: "above-center",
-  // where: 'AccessDate IS NULL',
 });
 
 //--- CP BREAKLINE LAYER ---//
 export const cp_breakline_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#4ce600",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#4ce600", width: "2px" }),
 });
 
 //--- SC SUBSTATION LAYER ---//
@@ -926,38 +745,29 @@ export const substation_renderer = new SimpleRenderer({
   symbol: new SimpleFillSymbol({
     color: [115, 178, 255],
     style: "backward-diagonal",
-    outline: {
-      color: "#004DA8",
-      width: 1.5,
-    },
+    outline: { color: "#004DA8", width: 1.5 },
   }),
 });
 
 //--- PROW LAYER ---//
 // ORIGINAL (DEFAULT)
 export const prow_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#ff0000",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#ff0000", width: "2px" }),
 });
 
 // VERSION 7.1.6
 export const prow716_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#DF00FF",
-    width: "2px",
-    // style: "long-dash-dot",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#DF00FF", width: "2px" }),
+});
+
+// VERSION 5.0.6
+export const prow506_renderer = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({ color: "#08f0f8", width: "2px" }),
 });
 
 // VERSION 3.9.3
 export const prow393_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#ffc800",
-    width: "2px",
-    // style: "long-dash-dot",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#ffc800", width: "2px" }),
 });
 
 // PROW (MERALCO SITE)
@@ -974,42 +784,27 @@ export const prow_tunnel_renderer = new SimpleRenderer({
 
 //--- TEMPORARY FENCING LAYER ---//
 export const temp_fencing_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#FFEBBE",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#FFEBBE", width: "2px" }),
 });
 
 //--- PERMANENT FENCING LAYER ---//
 export const permanent_fencing_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#FFA77F",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#FFA77F", width: "2px" }),
 });
 
 //--- MAINTENANCE ROAD LAYER ---//
 export const maintenance_road_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#98E600",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#98E600", width: "2px" }),
 });
 
 //--- DRAINAGE LAYER ---//
 export const drainage_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#0070FF",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#0070FF", width: "2px" }),
 });
 
 //--- FUTURE TRACK LAYER ---//
 export const freight_line_renderer = new SimpleRenderer({
-  symbol: new SimpleLineSymbol({
-    color: "#00FFC5",
-    width: "2px",
-  }),
+  symbol: new SimpleLineSymbol({ color: "#00FFC5", width: "2px" }),
 });
 
 //--- PROPOSED EAST SERVICE ROAD ---//
@@ -1029,10 +824,7 @@ export const ngcp_wa_renderer = new SimpleRenderer({
   symbol: new SimpleFillSymbol({
     color: [197, 0, 255],
     style: "backward-diagonal",
-    outline: {
-      color: "#C500FF",
-      width: 0.7,
-    },
+    outline: { color: "#C500FF", width: 0.7 },
   }),
 });
 
@@ -1052,18 +844,9 @@ export const label_ngcp_pole = new LabelClass({
   symbol: new LabelSymbol3D({
     symbolLayers: [
       new TextSymbol3DLayer({
-        material: {
-          color: [255, 255, 0],
-        },
+        material: { color: [255, 255, 0] },
         size: 15,
-        halo: {
-          color: "black",
-          size: 0.5,
-        },
-        // font: {
-        //   family: 'Ubuntu Mono',
-        //   //weight: "bold"
-        // },
+        halo: { color: "black", size: 0.5 },
       }),
     ],
     verticalOffset: {
@@ -1076,26 +859,18 @@ export const label_ngcp_pole = new LabelClass({
       type: "line", // autocasts as new LineCallout3D()
       color: [128, 128, 128, 0.5],
       size: 0.2,
-      border: {
-        color: "grey",
-      },
+      border: { color: "grey" },
     },
   }),
   labelPlacement: "above-center",
-  labelExpressionInfo: {
-    expression: "$feature.POLE_ID",
-    //value: "{TEXTSTRING}"
-  },
+  labelExpressionInfo: { expression: "$feature.POLE_ID" },
 });
 
 export const ngcp_pole_renderer = new SimpleRenderer({
   symbol: new SimpleFillSymbol({
     color: [255, 255, 0],
     style: "backward-diagonal",
-    outline: {
-      color: "#FFFF00",
-      width: 0.7,
-    },
+    outline: { color: "#FFFF00", width: 0.7 },
   }),
 });
 
@@ -1125,10 +900,7 @@ export const pnr_renderer = new UniqueValueRenderer({
       symbol: new SimpleFillSymbol({
         color: [137, 205, 102],
         style: "diagonal-cross",
-        outline: {
-          width: 0.5,
-          color: "black",
-        },
+        outline: { width: 0.5, color: "black" },
       }),
     },
     {
@@ -1137,10 +909,7 @@ export const pnr_renderer = new UniqueValueRenderer({
       symbol: new SimpleFillSymbol({
         color: [137, 205, 102],
         style: "diagonal-cross",
-        outline: {
-          width: 0.5,
-          color: "black",
-        },
+        outline: { width: 0.5, color: "black" },
       }),
     },
   ],
@@ -1154,24 +923,11 @@ export const pnr_popup = {
     {
       type: "fields",
       fieldInfos: [
-        {
-          fieldName: "OwnershipType",
-          label: "Ownership Type",
-        },
-        {
-          fieldName: "HandOverDate",
-          label: "Hand-Over Date",
-        },
-        {
-          fieldName: "Municipality",
-        },
-        {
-          fieldName: "Barangay",
-        },
-        {
-          fieldName: "LandOwner",
-          label: "Land Owner",
-        },
+        { fieldName: "OwnershipType", label: "Ownership Type" },
+        { fieldName: "HandOverDate", label: "Hand-Over Date" },
+        { fieldName: "Municipality" },
+        { fieldName: "Barangay" },
+        { fieldName: "LandOwner", label: "Land Owner" },
       ],
     },
   ],
@@ -1257,10 +1013,7 @@ const treec_uniqueV = treec_status_q.map((q: any) => {
 });
 
 const treec_col_stops = treec_status_q.map((q: any) => {
-  return {
-    value: q.value,
-    color: q.color,
-  };
+  return { value: q.value, color: q.color };
 });
 
 const treec_qe = "When($feature.Status >= 1, 5, 0)";
@@ -1288,10 +1041,7 @@ const treem_uniqueV = treem_status_q.map((q: any) => {
 });
 
 const treem_col_stops = treem_status_q.map((q: any) => {
-  return {
-    value: q.value,
-    color: q.color,
-  };
+  return { value: q.value, color: q.color };
 });
 
 const treem_qe = "When($feature.Compensation >= 1, 5, 0)";
@@ -1637,7 +1387,6 @@ const utilp2_text_symbol = utilLabelSymbol3D({
 export const utilp2_label = new LabelClass({
   labelPlacement: "above-center",
   labelExpressionInfo: {
-    //value: "{Company}",
     expression:
       "When($feature.Status >= 0, DomainName($feature, 'Comp_Agency'), '')", //$feature.Comp_Agency
   },
@@ -1748,9 +1497,7 @@ function utilLineSizeSymbol(
 }
 
 export const utilLineRenderer = () => {
-  const renderer = new UniqueValueRenderer({
-    field: "utiltype2",
-  });
+  const renderer = new UniqueValueRenderer({ field: "utiltype2" });
 
   utill_symbol_q.map((item: any) => {
     renderer.addUniqueValueInfo({

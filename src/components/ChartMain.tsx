@@ -8,19 +8,24 @@ import "@arcgis/map-components/dist/components/arcgis-scene";
 import "@arcgis/map-components/components/arcgis-scene";
 import LotChart from "./ChartLot";
 import "../index.css";
-import StructureChart from "./ChartStructure";
-import NloChart from "./ChartNlo";
 import { primaryLabelColor } from "../uniqueValues";
 import { useState } from "react";
-import TreeCuttingChart from "./ChartTreeCutting";
-import TreeCompensationChart from "./ChartTreeCompensation";
-import ViaductChart from "./ChartViaduct";
-import UtilityPointChart from "./ChartUtilityPoint";
-import UtilityLineChart from "./ChartUtilityLine";
+import ChartStructure from "./ChartStructure";
+import ChartNlo from "./ChartNlo";
+import ChartTreeCutting from "./ChartTreeCutting";
+import ChartTreeCompensation from "./ChartTreeCompensation";
+import ChartUtilityLine from "./ChartUtilityLine";
+import ChartUtilityPoint from "./ChartUtilityPoint";
+import ChartViaduct from "./ChartViaduct";
 
 function ChartMain() {
   const [panelWidth, setPanelWidth] = useState<string>("40%");
   const [panelHeader, setPanelHeader] = useState<string>("Chart");
+  const [tabName, setTabName] = useState<string>("Land");
+
+  const handleTabChange = (event: any) => {
+    setTabName(event.target.selectedTitle.textContent);
+  };
 
   const handlePanelCollapse = (event: any) => {
     const collapse_state = event.target.collapsed;
@@ -56,12 +61,10 @@ function ChartMain() {
           display: "block", // without adding display, background will not disappear.
           scrollbarWidth: "none",
         }}
-        // oncalcitePanelCollapse={handlePanelCollapse}
         onClick={handlePanelCollapse}
       >
         <calcite-tabs
           style={{
-            // borderStyle: "solid",
             borderRightWidth: 1,
             borderLeftWidth: 1,
             borderBottomWidth: 1,
@@ -71,17 +74,17 @@ function ChartMain() {
           layout="center"
           scale="m"
         >
-          <calcite-tab-nav slot="title-group" id="thetabs">
-            <calcite-tab-title className="Land">Land</calcite-tab-title>
-            <calcite-tab-title className="Structure">
-              Structure
-            </calcite-tab-title>
-            <calcite-tab-title className="Households">
-              Households
-            </calcite-tab-title>
-            <calcite-tab-title className="Households">Tree</calcite-tab-title>
-            <calcite-tab-title className="Utility">Utility</calcite-tab-title>
-            <calcite-tab-title className="Viaduct">Viaduct</calcite-tab-title>
+          <calcite-tab-nav
+            slot="title-group"
+            id="thetabs"
+            oncalciteTabChange={handleTabChange}
+          >
+            <calcite-tab-title>Land</calcite-tab-title>
+            <calcite-tab-title>Structure</calcite-tab-title>
+            <calcite-tab-title>Households</calcite-tab-title>
+            <calcite-tab-title>Tree</calcite-tab-title>
+            <calcite-tab-title>Utility</calcite-tab-title>
+            <calcite-tab-title>Viaduct</calcite-tab-title>{" "}
           </calcite-tab-nav>
 
           {/* CalciteTab: Lot */}
@@ -91,30 +94,34 @@ function ChartMain() {
 
           {/* CalciteTab: Structure */}
           <calcite-tab>
-            <StructureChart />
+            {tabName === "Structure" && <ChartStructure />}
           </calcite-tab>
 
           {/* CalciteTab: Non-Land Owner */}
-          <calcite-tab>
-            <NloChart />
-          </calcite-tab>
+          <calcite-tab>{tabName === "Households" && <ChartNlo />}</calcite-tab>
 
           {/* CalciteTab: Tree Cutting & Compensation */}
           <calcite-tab>
-            <TreeCuttingChart />
-            <TreeCompensationChart />
+            {tabName === "Tree" && (
+              <>
+                <ChartTreeCutting />
+                <ChartTreeCompensation />
+              </>
+            )}
           </calcite-tab>
 
           {/* CalciteTab: Viaduct */}
           <calcite-tab>
-            <UtilityPointChart />
-            <UtilityLineChart />
+            {tabName === "Utility" && (
+              <>
+                <ChartUtilityPoint />
+                <ChartUtilityLine />
+              </>
+            )}
           </calcite-tab>
 
           {/* CalciteTab: Viaduct */}
-          <calcite-tab>
-            <ViaductChart />
-          </calcite-tab>
+          <calcite-tab>{tabName === "Viaduct" && <ChartViaduct />}</calcite-tab>
         </calcite-tabs>
       </calcite-panel>
     </>

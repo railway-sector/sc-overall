@@ -13,6 +13,7 @@ import {
   utill2_line_label,
   via_renderer,
   via_popup,
+  prow506_renderer,
 } from "./uniqueValues";
 
 import {
@@ -161,6 +162,15 @@ export const prowLayerold = new FeatureLayer({
   definitionExpression: "Version = 'v.7.1.6b'",
   popupEnabled: false,
   renderer: prow716_renderer,
+});
+
+// ROW Layer version 5.0.6
+export const prowLayer506 = new FeatureLayer({
+  portalItem: portalItems("84ba987eed264fe9b18938000ddf702d"),
+  title: "SC Alignment 5.0.6",
+  definitionExpression: "Version = 'v.5.0.6'",
+  popupEnabled: false,
+  renderer: prow506_renderer,
 });
 
 // ROW Layer version 3.9.3
