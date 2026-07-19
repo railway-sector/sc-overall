@@ -1736,10 +1736,7 @@ export async function defineActions(event: any) {
   item.title === "Tree Cutting" ||
   item.title === "Tree Compensation" ||
   item.title === "Tree Cutting & Compensation" ||
-  item.title === "Point Symbol" ||
-  item.title === "Point Status" ||
-  item.title === "Line Symbol" ||
-  item.title === "Line Status" ||
+  item.title === "Utility Relocation" ||
   item.title === "Pier Head/Column" ||
   item.title === "Viaduct"
     ? (item.visible = false)

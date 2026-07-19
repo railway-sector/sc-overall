@@ -5,7 +5,7 @@ import {
   fieldStatistic,
   makeQuery,
   pieChartData,
-  PieChartRenderType,
+  PieChartRender,
   thousands_separators,
   zoomToLayer,
 } from "../query";
@@ -207,7 +207,7 @@ const ChartLot = () => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    PieChartRenderType({
+    PieChartRender({
       render: new ChartPieSeriesRender(),
       chart,
       pieSeries: pieSeries,
