@@ -4,7 +4,7 @@
 
 import { dateTable } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
-import { lot_ho_f, cp_f, lot_status_f } from "./uniqueValues";
+import { cp_f } from "./uniqueValues";
 import type { statisticsType } from "./interfaceKeys";
 import Query from "@arcgis/core/rest/support/Query";
 import QueryExpressionLayers from "query-layers-expression";
@@ -315,19 +315,19 @@ export function highlightRemove() {
   highlight?.remove();
 }
 
-export async function highlightHandedOverLot(layer: any, view: any) {
-  const query = new Query({
-    where: `${lot_ho_f} = 1 AND ${lot_status_f} <> 8`,
-  });
+// export async function highlightHandedOverLot(layer: any, view: any) {
+//   const query = new Query({
+//     where: `${lot_ho_f} = 1 AND ${lot_status_f} <> 8`,
+//   });
 
-  const [layerView, results] = await Promise.all([
-    view?.whenLayerView(layer),
-    layer?.queryObjectIds(query),
-  ]);
+//   const [layerView, results] = await Promise.all([
+//     view?.whenLayerView(layer),
+//     layer?.queryObjectIds(query),
+//   ]);
 
-  highlight?.remove();
-  highlight = layerView.highlight(results);
-}
+//   highlight?.remove();
+//   highlight = layerView.highlight(results);
+// }
 
 //---------------------------------------------//
 //                  Other Tools                //

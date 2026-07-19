@@ -233,7 +233,7 @@ const ChartLot = () => {
     return () => {
       root.dispose();
     };
-  }, [chartID, chartData]);
+  }, [cpackage, chartData]);
 
   useEffect(() => {
     pieSeriesRef.current?.data.setAll(chartData);
