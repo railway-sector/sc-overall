@@ -160,10 +160,10 @@ const ChartLot = () => {
   // ************************************
   //  Chart
   // ***********************************
-  const new_fontSize = chartPanelwidth / 22.3;
-  const new_valueSize = new_fontSize * 1.55;
+  const new_fontSize = chartPanelwidth / 30;
+  const new_valueSize = chartPanelwidth / 19;
   const new_imageSize = chartPanelwidth * 0.03;
-  const new_asofDateSize = chartPanelwidth * 0.032;
+  const new_asofDateSize = chartPanelwidth * 0.03;
   const new_pieSeriesScale = 220;
   const new_pieInnerValueFontSize = "1.1rem";
   const new_pieInnerLabelFontSize = "0.45em";
@@ -258,8 +258,8 @@ const ChartLot = () => {
           height={`${new_imageSize}%`}
           width={`${new_imageSize}%`}
           style={{
-            paddingTop: "5px",
-            paddingLeft: "5px",
+            paddingTop: "1%",
+            paddingLeft: "1%",
             opacity: isLoading ? 0 : 1,
           }}
         />
@@ -267,7 +267,7 @@ const ChartLot = () => {
           <dt
             style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
           >
-            Total Lots
+            TOTAL LOTS
           </dt>
           <dd
             style={{
@@ -278,6 +278,7 @@ const ChartLot = () => {
               lineHeight: "1.2",
               margin: "auto",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {thousands_separators(lotNumber)}
@@ -287,7 +288,7 @@ const ChartLot = () => {
           <dt
             style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
           >
-            Total Affected Area
+            TOTAL AFFECTED AREA
           </dt>
           {/* #d3d3d3 */}
           <dd
@@ -299,6 +300,7 @@ const ChartLot = () => {
               margin: "auto",
               fontWeight: "bold",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {total_aa && thousands_separators(total_aa.toFixed(0))}
@@ -322,8 +324,8 @@ const ChartLot = () => {
           color: "gray",
           fontSize: `${new_asofDateSize}px`,
           float: "right",
-          marginRight: "5px",
-          marginTop: "5px",
+          marginRight: "1%",
+          marginTop: "1.5%",
           opacity: isLoading ? 0 : 1,
         }}
       >
@@ -338,8 +340,8 @@ const ChartLot = () => {
           height: "57vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
-          marginBottom: "3%",
-          marginTop: "2%",
+          marginTop: "6%",
+          marginBottom: "1%",
           opacity: isLoading ? 0 : 1,
         }}
       ></div>
@@ -348,10 +350,10 @@ const ChartLot = () => {
       <div
         style={{
           display: "flex",
-          marginLeft: "15px",
-          marginRight: "15px",
+          marginLeft: "3%",
+          marginRight: "5%",
           justifyContent: "space-between",
-          marginBottom: "10px",
+          marginTop: "3%",
         }}
       >
         <div
@@ -375,7 +377,7 @@ const ChartLot = () => {
           <dt
             style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
           >
-            Total Handed-Over
+            TOTAL HANDED-OVER
           </dt>
           <dd
             style={{
@@ -386,6 +388,7 @@ const ChartLot = () => {
               lineHeight: "1.2",
               margin: "auto",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {total_hop}% ({thousands_separators(total_ho)})
@@ -395,7 +398,7 @@ const ChartLot = () => {
           <dt
             style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
           >
-            Handed-Over Area
+            HANDED-OVER AREA
           </dt>
           {/* #d3d3d3 */}
           <dd
@@ -407,6 +410,7 @@ const ChartLot = () => {
               margin: "auto",
               fontWeight: "bold",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {total_hoa && thousands_separators(total_hoa.toFixed(0))}
