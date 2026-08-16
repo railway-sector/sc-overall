@@ -73,7 +73,7 @@ export const stationLayer = new FeatureLayer({
   layerId: 6,
   title: "SC Stations",
   labelingInfo: [label_stationp],
-  elevationInfo: { mode: "relative-to-ground" },
+  elevationInfo: { mode: "on-the-ground" },
 });
 stationLayer.listMode = "hide";
 
@@ -333,6 +333,8 @@ export const pnrLayer = new FeatureLayer({
   definitionExpression: "OwnershipType IN (1, 2)",
   elevationInfo: { mode: "on-the-ground" },
   labelsVisible: false,
+  minScale: 40000,
+  maxScale: 0,
   renderer: pnr_renderer,
   popupTemplate: pnr_popup,
 });
@@ -637,7 +639,7 @@ export const utilityLayers: any = {
 
 //--- VIADUCT MULTIPATCH LAYER ---//
 export const viaductLayer = new SceneLayer({
-  portalItem: portalItems("1f89733a04b443e2a1e0e5e6dfd493e3"),
+  portalItem: portalItems("691f64c4647f439eabc9b18ebd56ce73"),
   elevationInfo: { mode: "absolute-height" },
   title: "Viaduct",
   labelsVisible: false,

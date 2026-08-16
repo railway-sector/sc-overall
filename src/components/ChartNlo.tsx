@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useRef, useState, useEffect, memo, use } from "react";
-import {
-  dateUpdate,
-  makeQuery,
-  pieChartData,
-  PieChartRender,
-  thousands_separators,
-} from "../query";
+import { dateUpdate, fieldStatistic, thousands_separators } from "../query";
 import {
   nlo_status_f,
   primaryLabelColor,
@@ -21,7 +15,6 @@ import type { ChartResponse } from "../interfaceKeys";
 import {
   chartSetter,
   legendSetter,
-  maybeDisposeRoot,
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
@@ -29,9 +22,50 @@ import ChartPieSeriesRender from "chart-pie-series-render";
 import { MyContext } from "../contexts/MyContext";
 import ChartPieSeries from "chart-pie-series";
 import { queryDefinitionExpression } from "../queryDefinition";
-//--------------------------------------------//
-//              Chart Component                //
-//--------------------------------------------//
+import QueryExpressionLayers from "query-layers-expression";
+
+//--------------------------//
+//        useNloData        //
+//--------------------------//
+function useNloData(cpackage: string, statusField: string, baseFilter: any) {
+  return useQuery<ChartResponse | any>({
+    queryKey: [cpackage, statusField, nloLayer],
+    queryFn: async () => {
+      const q1 = new QueryExpressionLayers({
+        ...baseFilter,
+        qExpression: `${nlo_status_f} >= 1`,
+      });
+
+      queryDefinitionExpression({
+        queryExpression: q1.queryExpression(),
+        featureLayer: [nloLayer],
+      });
+
+      const baseArgs = {
+        layer: nloLayer,
+        statisticField: "OBJECTID",
+        statisticType: "count" as const,
+      };
+
+      const [chartData, totalNumber] = await Promise.all([
+        new ChartPieSeries({
+          ...baseArgs,
+          where: q1.queryExpression(),
+          statusList: nlo_status_q,
+          statusField: nlo_status_f,
+        }).pieSeries(),
+
+        fieldStatistic({
+          ...baseArgs,
+          where: new QueryExpressionLayers({ ...baseFilter }).queryExpression(),
+        }),
+      ]);
+
+      return { chartData, totalNumber, q1 };
+    },
+    staleTime: Infinity,
+  });
+}
 
 //--- memo prevents re-rendering the Component when the parent Component
 //--- (ChartMain) is rendered.
@@ -62,44 +96,20 @@ const ChartNlo = memo(() => {
   const legendRef = useRef<unknown | any | undefined>({});
   const chartID = "nlo-chart";
 
-  //--- Generat Chart Data
-  const qV = [cpackage === "All" ? undefined : cpackage];
-  const qF = [cp_f];
-  const queryc_nlo = makeQuery(qV, qF, `${nlo_status_f} >= 1`);
+  //--- Base filter
+  const baseFilter = {
+    qFields: [cp_f],
+    qValues: [cpackage === "All" ? undefined : cpackage],
+  };
 
-  const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, nlo_status_f, nloLayer],
-    queryFn: async () => {
-      queryDefinitionExpression({
-        queryExpression: queryc_nlo.queryExpression(),
-        featureLayer: [nloLayer],
-      });
-
-      //--- Pie chart data
-      const chartData = await pieChartData({
-        piechart: new ChartPieSeries(),
-        qChart: queryc_nlo,
-        layer: nloLayer,
-        statusList: nlo_status_q,
-        statusField: nlo_status_f,
-        statisticField: nlo_status_f,
-        statisticType: "count",
-      });
-
-      return {
-        chartData: chartData[0] || [],
-        totalNumber: chartData[1],
-      };
-    },
-    staleTime: Infinity,
-  });
+  //--- Fetch data
+  const { data, isLoading } = useNloData(cpackage, nlo_status_f, baseFilter);
 
   //--- Call chart data
   const chartData = data?.chartData || [];
   const totalNumber = data?.totalNumber || 0;
 
   useEffect(() => {
-    maybeDisposeRoot(chartID);
     const root = rootSetter({ chartID: chartID });
     const chart = chartSetter({ root: root, y: -10 });
 
@@ -112,7 +122,6 @@ const ChartNlo = memo(() => {
       legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
       radius: 45,
       innerRadius: 28,
-      // scale: 1.7,
     });
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
@@ -127,13 +136,12 @@ const ChartNlo = memo(() => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    PieChartRender({
-      render: new ChartPieSeriesRender(),
+    new ChartPieSeriesRender({
       chart,
       pieSeries: pieSeries,
       legend,
       root,
-      qChart: queryc_nlo,
+      qChart: data?.q1,
       q2Expression: undefined,
       status_field: nlo_status_f,
       view: arcgisScene?.view,
@@ -147,7 +155,7 @@ const ChartNlo = memo(() => {
       statusArray: nlo_status_q,
       bkg_color_switch: false,
       seriesFillHash: undefined,
-    });
+    }).chartDataRenderer();
 
     return () => {
       root.dispose();
@@ -164,7 +172,6 @@ const ChartNlo = memo(() => {
       <div
         style={{
           display: "flex",
-          // marginTop: "3px",
           marginLeft: "15px",
           marginRight: "15px",
           justifyContent: "space-between",
