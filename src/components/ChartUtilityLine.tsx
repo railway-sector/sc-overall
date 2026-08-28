@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, use, memo } from "react";
+import { useEffect, useRef, useState, use, memo, useMemo } from "react";
 import { utilityLineLayer, utilityLineLayer1 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
@@ -20,8 +20,26 @@ import {
 import ChartStackColumns from "chart-stack-column";
 import QueryExpressionLayers from "query-layers-expression";
 
+const CHART_ID = "utility-line-bar";
+const CHART_BORDER_COLOR = "#00c5ff";
+const CHART_BORDER_WIDTH = 0.4;
+const CHART_ICON_POSITION_X = undefined;
+const CHART_PADDING_RIGHT_ICON_LABEL = 25;
+
+// Static chart layout — doesn't depend on props/state
+const CHART_LAYOUT = {
+  marginTop: 0,
+  marginLeft: 0,
+  marginRight: 0,
+  marginBottom: 0,
+  paddingTop: 10,
+  paddingLeft: 5,
+  paddingRight: 5,
+  paddingBottom: 0,
+} as const;
+
 //-----------------------//
-//     usetUtilityData   //
+//     useUtilityData    //
 //-----------------------//
 function useUtilityData(
   cpackage: string,
@@ -42,7 +60,6 @@ function useUtilityData(
         featureLayer: [utilityLineLayer, utilityLineLayer1],
       });
 
-      //--- chart data
       const chartData = await new ChartStackColumns({
         where: query,
         categoryTypes: util_types,
@@ -66,48 +83,38 @@ function useUtilityData(
 
 // Draw chart
 const ChartUtilityLine = memo(() => {
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const { cpackage, updateUtilityLinestats } = use(MyContext);
+  const legendRef = useRef<unknown | any | undefined>({});
+  const chartRef = useRef<unknown | any | undefined>({});
 
   //--- Query Expression
-  const q1 = new QueryExpressionLayers({
-    qFields: [cp_f],
-    qValues: [cpackage === "All" ? undefined : cpackage],
-  });
+  const q1 = useMemo(
+    () =>
+      new QueryExpressionLayers({
+        qFields: [cp_f],
+        qValues: [cpackage === "All" ? undefined : cpackage],
+      }),
+    [cpackage],
+  );
 
   const { data, isLoading } = useUtilityData(
     cpackage,
     q1,
     updateUtilityLinestats,
   );
-  const chartData = data?.chartData || [];
+  const chartData = data?.chartData ?? [];
 
-  const legendRef = useRef<unknown | any | undefined>({});
-  const chartRef = useRef<unknown | any | undefined>({});
-  const chartID = "utility-line-bar";
+  // ************************************
+  //  Responsive Chart parameters
+  // ***********************************
+  const new_chartIconSize = chartPanelwidth ? chartPanelwidth * 0.06 : 0;
+  const new_axisFontSize = chartPanelwidth ? chartPanelwidth * 0.03 : 0;
 
-  // Define parameters
-  const marginTop = 0;
-  const marginLeft = 0;
-  const marginRight = 0;
-  const marginBottom = 0;
-  const paddingTop = 10;
-  const paddingLeft = 5;
-  const paddingRight = 5;
-  const paddingBottom = 0;
-  const chartIconPositionX = -21;
-  const chartPaddingRightIconLabel = 45;
-
-  const chartBorderLineColor = "#00c5ff";
-  const chartBorderLineWidth = 0.4;
-
-  const new_chartIconSize = chartPanelwidth * 0.06;
-  const new_axisFontSize = chartPanelwidth * 0.03;
-
-  // Utility point
+  // Utility line
   useEffect(() => {
-    const root = rootSetter({ chartID: chartID });
+    const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+    const root = rootSetter({ chartID: CHART_ID });
     root.setThemes([]);
 
     const chart = root.container.children.push(
@@ -115,14 +122,7 @@ const ChartUtilityLine = memo(() => {
         panX: false,
         panY: false,
         layout: root.verticalLayout,
-        marginTop: marginTop,
-        marginLeft: marginLeft,
-        marginRight: marginRight,
-        marginBottom: marginBottom,
-        paddingTop: paddingTop,
-        paddingLeft: paddingLeft,
-        paddingRight: paddingRight,
-        paddingBottom: paddingBottom,
+        ...CHART_LAYOUT,
         scale: 1,
         height: am5.percent(100),
       }),
@@ -130,8 +130,8 @@ const ChartUtilityLine = memo(() => {
     chartRef.current = chart;
 
     const legend = legendSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       marginTop: 15,
       scale: 0.9,
       layout: root.horizontalLayout,
@@ -139,7 +139,6 @@ const ChartUtilityLine = memo(() => {
     });
     legendRef.current = legend;
 
-    // chart renderer
     new ChartStackColumnRender({
       revit: false,
       layers: [utilityLineLayer, utilityLineLayer1],
@@ -150,26 +149,24 @@ const ChartUtilityLine = memo(() => {
       where: q1,
       chartCategoryTypes: util_types,
       chartCategoryTypeField: util_type_f,
-      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
-      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      statusTypename: ["Completed", "To be Constructed"],
+      statusStatename: ["comp", "incomp"],
       statusArray: util_status_q,
       statusField: util_status_f,
       seriesStatusColor: viastatus_q.map((c: any) => c.color),
-      strokeColor: chartBorderLineColor,
-      strokeWidth: chartBorderLineWidth,
+      strokeColor: CHART_BORDER_COLOR,
+      strokeWidth: CHART_BORDER_WIDTH,
       view: arcgisScene?.view,
       new_chartIconSize,
       new_axisFontSize,
-      chartIconPositionX,
-      chartPaddingRightIconLabel,
+      chartIconPositionX: CHART_ICON_POSITION_X,
+      chartPaddingRightIconLabel: CHART_PADDING_RIGHT_ICON_LABEL,
       legend,
       updateChartPanelwidth: setChartPanelwidth,
     }).chartRendererColumn();
 
-    return () => {
-      root.dispose();
-    };
-  });
+    return () => root.dispose();
+  }, [chartData, new_chartIconSize]);
 
   return (
     <>
@@ -190,12 +187,12 @@ const ChartUtilityLine = memo(() => {
         LINE FEATURE:
       </div>
       <div
-        id={chartID}
+        id={CHART_ID}
         style={{
           height: "32vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
-          marginRight: "15px",
+          marginRight: "20px",
           marginLeft: "15px",
           opacity: isLoading ? 0 : 1,
         }}

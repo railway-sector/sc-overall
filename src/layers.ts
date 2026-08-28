@@ -15,6 +15,10 @@ import {
   via_popup,
   prow506_renderer,
   util_minScale,
+  lot_partialPayment_renderer,
+  lot_pte_renderer,
+  lot_pte_f,
+  demolished_renderer,
 } from "./uniqueValues";
 
 import {
@@ -355,6 +359,33 @@ export const lotLayer = new FeatureLayer({
   elevationInfo: { mode: "on-the-ground" },
 });
 
+//--- PARTIAL PAYMENT LAYER ---//
+export const lotPartialPaymentLayer = new FeatureLayer({
+  portalItem: portalItems("99500faf0251426ea1df934a739faa6f"),
+  renderer: lot_partialPayment_renderer,
+  layerId: 1,
+  title: "With Partial Payment",
+  popupEnabled: false,
+  labelingInfo: [lot_label],
+  definitionExpression: `PartialPayment = 1`,
+  elevationInfo: { mode: "on-the-ground" },
+  visible: false,
+});
+
+//--- PTE STATUS LAYER ---//
+export const lotPteLayer = new FeatureLayer({
+  portalItem: portalItems("99500faf0251426ea1df934a739faa6f"),
+  layerId: 1,
+  labelingInfo: [lot_label],
+  renderer: lot_pte_renderer,
+  definitionExpression: `${lot_pte_f} = 1`,
+  popupTemplate: lot_popup,
+  title: "With Permit to Enter (PTE)",
+  minScale: 40000,
+  maxScale: 0,
+  elevationInfo: { mode: "on-the-ground" },
+});
+
 //--- OPTIMIZED LOT FOR PASSENGER LINE ---//
 export const optimizedLots_passengerLineLayer = new FeatureLayer({
   portalItem: portalItems("99500faf0251426ea1df934a739faa6f"),
@@ -435,6 +466,19 @@ export const strucOwnershipLayer = new FeatureLayer({
   elevationInfo: { mode: "on-the-ground" },
 });
 
+//--- DEMOLISHED LAYER ---//
+export const demolishedStrucLayer = new FeatureLayer({
+  portalItem: portalItems("99500faf0251426ea1df934a739faa6f"),
+  renderer: demolished_renderer,
+  layerId: 2,
+  title: "Demolished Structure",
+  popupEnabled: false,
+  definitionExpression: `Demolition = 1`,
+  elevationInfo: { mode: "on-the-ground" },
+  visible: false,
+});
+demolishedStrucLayer.listMode = "hide";
+
 //--- NLO LAYER ---//
 export const nloLayer = new FeatureLayer({
   portalItem: portalItems("99500faf0251426ea1df934a739faa6f"),
@@ -501,6 +545,8 @@ export const lotGroupLayer = new GroupLayer({
   visibilityMode: "independent",
   layers: [
     lotLayer,
+    lotPteLayer,
+    lotPartialPaymentLayer,
     optimizedLots_passengerLineLayer,
     studiedLots_optimizationLayer,
     tunnelAffectedLotLayer,

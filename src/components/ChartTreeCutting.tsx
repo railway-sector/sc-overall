@@ -1,14 +1,8 @@
-import { useEffect, useRef, useState, use, memo } from "react";
+import { useEffect, useRef, useState, use, memo, useMemo } from "react";
 import { treeCuttingLayer } from "../layers";
-import {
-  thousands_separators,
-  dateUpdate,
-  fieldStatistic,
-  zoomToLayer,
-} from "../query";
+import { thousands_separators, dateUpdate, fieldStatistic } from "../query";
 import {
   cp_f,
-  monitorLists,
   primaryLabelColor,
   treec_status_f,
   treec_status_q,
@@ -28,6 +22,11 @@ import {
 import ChartPieSeriesRender from "chart-pie-series-render";
 import ChartPieSeries from "chart-pie-series";
 import QueryExpressionLayers from "query-layers-expression";
+
+const CHART_ID = "pie-cut";
+const SERIES_SCALE = 220;
+const INNER_VALUE_FONT_SIZE = "0.75rem";
+const INNER_LABEL_FONT_SIZE = "0.45em";
 
 //--------------------------//
 //      useTreeData         //
@@ -64,60 +63,51 @@ function useTreeData(cpackage: any, query: any) {
 }
 
 const ChartTreeCutting = memo(() => {
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const { cpackage } = use(MyContext);
 
   //--- As of date
-  const { data: date } = useQuery<any>({
+  const { data: asofdate = "" } = useQuery({
     queryKey: ["As_Of_Date"],
-    queryFn: () => dateUpdate(monitorLists[4]),
+    queryFn: () => dateUpdate("Trees"),
     staleTime: Infinity,
   });
-  const asofdate = date ?? "";
 
-  const q1 = new QueryExpressionLayers({
-    qFields: [cp_f],
-    qValues: [cpackage === "All" ? undefined : cpackage],
-  });
+  //--- Query expression
+  const q1 = useMemo(
+    () =>
+      new QueryExpressionLayers({
+        qFields: [cp_f],
+        qValues: [cpackage === "All" ? undefined : cpackage],
+      }),
+    [cpackage],
+  );
 
   const { data, isLoading } = useTreeData(cpackage, q1);
-  const chartData = data?.chartData || [];
-  const totalNumber = data?.totalNumber || 0;
+  const chartData = data?.chartData ?? [];
+  const totalNumber = data?.totalNumber ?? 0;
 
-  //---- Parameters
-  const new_fontSize = chartPanelwidth / 22.3;
+  // ************************************
+  //  Responsive Chart parameters
+  // ***********************************
+  const new_fontSize = chartPanelwidth ? chartPanelwidth / 22.3 : 0;
   const new_valueSize = new_fontSize * 1.55;
-  const new_imageSize = chartPanelwidth * 0.03;
-  const new_asofDateSize = chartPanelwidth * 0.032;
-  const new_pieSeriesScale = 220;
-  const new_pieInnerValueFontSize = "0.75rem";
-  const new_pieInnerLabelFontSize = "0.45em";
+  const new_imageSize = chartPanelwidth ? chartPanelwidth * 0.03 : 0;
+  const new_asofDateSize = chartPanelwidth ? chartPanelwidth * 0.032 : 0;
 
   const pieSeriesRef = useRef<unknown | any | undefined>({});
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const chartID = "pie-cut";
-
-  const zoomFiltersRef = useRef(`${cpackage}`);
 
   useEffect(() => {
-    const currentZoomFilters = `${cpackage}`;
-
-    if (currentZoomFilters !== zoomFiltersRef.current) {
-      zoomFiltersRef.current = currentZoomFilters;
-      zoomToLayer(treeCuttingLayer, arcgisScene?.view);
-    }
-
-    const root = rootSetter({ chartID: chartID });
-    root.setThemes([]);
-
-    const chart = chartSetter({ root: root });
+    const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+    const root = rootSetter({ chartID: CHART_ID });
+    const chart = chartSetter({ root });
     chartRef.current = chart;
 
     const pieSeries = seriesSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       categoryField: "category",
       valueField: "value",
       legendLabelText: "{category}",
@@ -130,8 +120,8 @@ const ChartTreeCutting = memo(() => {
     chart.series.push(pieSeries);
 
     const legend = legendSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       centerX: 50,
       x: 50,
       marginTop: -15,
@@ -139,10 +129,9 @@ const ChartTreeCutting = memo(() => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    // Render chart
     new ChartPieSeriesRender({
       chart,
-      pieSeries: pieSeries,
+      pieSeries,
       legend,
       root,
       qChart: q1,
@@ -151,25 +140,21 @@ const ChartTreeCutting = memo(() => {
       view: arcgisScene?.view,
       updateChartPanelwidth: setChartPanelwidth,
       data: chartData,
-      seriesScale: new_pieSeriesScale,
+      seriesScale: SERIES_SCALE,
       innerLabel: "TREES",
-      innerLabelFontSize: new_pieInnerLabelFontSize,
-      innerValueFontSize: new_pieInnerValueFontSize,
+      innerLabelFontSize: INNER_LABEL_FONT_SIZE,
+      innerValueFontSize: INNER_VALUE_FONT_SIZE,
       layer: treeCuttingLayer,
       statusArray: treec_status_q,
       bkg_color_switch: false,
       seriesFillHash: undefined,
     }).chartDataRenderer();
 
-    return () => {
-      root.dispose();
-    };
-  }, [chartID, chartData]);
+    pieSeries.data.setAll(chartData);
+    legend.data.setAll(pieSeries.dataItems);
 
-  useEffect(() => {
-    pieSeriesRef.current?.data.setAll(chartData);
-    legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
-  });
+    return () => root.dispose();
+  }, [chartData]);
 
   return (
     <>
@@ -227,7 +212,7 @@ const ChartTreeCutting = memo(() => {
       </div>
 
       <div
-        id={chartID}
+        id={CHART_ID}
         style={{
           height: "35vh",
           backgroundColor: "rgb(0,0,0,0)",

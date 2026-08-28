@@ -1,5 +1,10 @@
-import { use, useEffect, useRef, useState } from "react";
-import { handedOverLotLayer, lotLayer } from "../layers";
+import { memo, use, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lotPteLayer,
+  handedOverLotLayer,
+  lotLayer,
+  lotPartialPaymentLayer,
+} from "../layers";
 import {
   dateUpdate,
   fieldStatistic,
@@ -36,6 +41,11 @@ import { MyContext } from "../contexts/MyContext";
 import { queryDefinitionExpression } from "../queryDefinition";
 import QueryExpressionLayers from "query-layers-expression";
 
+const CHART_ID = "pie-two";
+const SERIES_SCALE = 220;
+const INNER_VALUE_FONT_SIZE = "1.1rem";
+const INNER_LABEL_FONT_SIZE = "0.45em";
+
 //--------------------------//
 //      useLotData          //
 //--------------------------//
@@ -48,7 +58,7 @@ function useLotData(
   baseFilter: any,
 ) {
   return useQuery<ChartResponse | any>({
-    queryKey: [lot_status_f, lotLayer, cpackage],
+    queryKey: [lot_status_f, lotLayer, cpackage, baseFilter],
     queryFn: async () => {
       const q1 = new QueryExpressionLayers({ ...baseFilter });
       const q2 = new QueryExpressionLayers({
@@ -58,7 +68,12 @@ function useLotData(
 
       queryDefinitionExpression({
         queryExpression: q1.queryExpression(),
-        featureLayer: [lotLayer, handedOverLotLayer],
+        featureLayer: [
+          lotLayer,
+          handedOverLotLayer,
+          lotPartialPaymentLayer,
+          lotPteLayer,
+        ],
       });
 
       const baseArgs = {
@@ -91,16 +106,10 @@ function useLotData(
         fieldStatistic({ ...baseArgs, statisticField: lot_id_f }),
 
         //--- Total affected area (m2)
-        fieldStatistic({
-          ...baseArgs2,
-          statisticField: afaField,
-        }),
+        fieldStatistic({ ...baseArgs2, statisticField: afaField }),
 
         //--- Total handed-over area (m2)
-        fieldStatistic({
-          ...baseArgs2,
-          statisticField: hoaField,
-        }),
+        fieldStatistic({ ...baseArgs2, statisticField: hoaField }),
 
         //--- Total number of handed-over
         fieldStatistic({
@@ -133,25 +142,26 @@ function useLotData(
 //--------------------------------------------//
 //              Chart Component                //
 //--------------------------------------------//
-const ChartLot = () => {
+const ChartLot = memo(() => {
   const { cpackage } = use(MyContext);
-  const arcgisScene = document.querySelector("arcgis-scene");
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const [handedOverCheckBox, setHandedOverCheckBox] = useState<any>(false);
 
   //--- As of date
-  const { data: date } = useQuery<any>({
+  const { data: asofdate = "" } = useQuery({
     queryKey: ["As_Of_Date"],
-    queryFn: () => dateUpdate("Viaduct"),
+    queryFn: () => dateUpdate("Land Acquisition"),
     staleTime: Infinity,
   });
-  const asofdate = date ?? "";
 
   //--- Base filter
-  const baseFilter = {
-    qFields: [cp_f],
-    qValues: [cpackage === "All" ? undefined : cpackage],
-  };
+  const baseFilter = useMemo(
+    () => ({
+      qFields: [cp_f],
+      qValues: [cpackage === "All" ? undefined : cpackage],
+    }),
+    [cpackage],
+  );
 
   //--- Generate chart data
   const { data, isLoading } = useLotData(
@@ -163,24 +173,22 @@ const ChartLot = () => {
     baseFilter,
   );
 
-  //--- Call chart data
-  const chartData = data?.chartData || [];
-  const totalNumber = data?.totalNumber || 0;
-  const affectedArea = data?.affectedArea || 0;
-  const handedOverArea = data?.handedOverArea || 0;
-  const handedOverNumber = data?.handedOverNumber || 0;
-  const handedOverPercent = data?.handedOverPercent || 0;
+  const chartData = data?.chartData ?? [];
+  const totalNumber = data?.totalNumber ?? 0;
+  const affectedArea = data?.affectedArea ?? 0;
+  const handedOverArea = data?.handedOverArea ?? 0;
+  const handedOverNumber = data?.handedOverNumber ?? 0;
+  const handedOverPercent = data?.handedOverPercent ?? 0;
 
-  const new_fontSize = chartPanelwidth / 30;
-  const new_valueSize = chartPanelwidth / 19;
-  const new_asofDateSize = chartPanelwidth * 0.03;
-  const new_pieSeriesScale = 220;
-  const new_pieInnerValueFontSize = "1.1rem";
-  const new_pieInnerLabelFontSize = "0.45em";
+  // ************************************
+  //  Responsive Chart parameters
+  // ***********************************
+  const new_fontSize = chartPanelwidth ? chartPanelwidth / 30 : 0;
+  const new_valueSize = chartPanelwidth ? chartPanelwidth / 19 : 0;
+  const new_asofDateSize = chartPanelwidth ? chartPanelwidth * 0.03 : 0;
 
   const pieSeriesRef = useRef<any>(null);
   const legendRef = useRef<any>(null);
-  const chartID = "pie-two";
 
   //--- Show handed-over lots
   useEffect(() => {
@@ -190,21 +198,22 @@ const ChartLot = () => {
   const zoomFiltersRef = useRef(`${cpackage}`);
 
   useEffect(() => {
+    const arcgisScene = document.querySelector("arcgis-scene");
+
     //--- Zoom after 1st render
     const currentZoomFilters = `${cpackage}`;
-
     if (currentZoomFilters !== zoomFiltersRef.current) {
       zoomFiltersRef.current = currentZoomFilters;
       zoomToLayer(lotLayer, arcgisScene?.view);
     }
 
-    const root = rootSetter({ chartID: chartID });
+    const root = rootSetter({ chartID: CHART_ID });
     root.setThemes([]);
-    const chart = chartSetter({ root: root, y: 10 });
+    const chart = chartSetter({ root, y: 10 });
 
     const pieSeries = seriesSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       categoryField: "category",
       valueField: "value",
       legendLabelText: "{category}",
@@ -216,8 +225,8 @@ const ChartLot = () => {
     chart.series.push(pieSeries);
 
     const legend = legendSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       centerX: 50,
       x: 50,
       scale: 1.0,
@@ -226,10 +235,9 @@ const ChartLot = () => {
     legend.setAll({ marginBottom: 10 });
     legend.data.setAll(pieSeries.dataItems);
 
-    //--- Chart Render
     new ChartPieSeriesRender({
       chart,
-      pieSeries: pieSeries,
+      pieSeries,
       legend,
       root,
       qChart: data?.query,
@@ -238,25 +246,21 @@ const ChartLot = () => {
       view: arcgisScene?.view,
       updateChartPanelwidth: setChartPanelwidth,
       data: chartData,
-      seriesScale: new_pieSeriesScale,
+      seriesScale: SERIES_SCALE,
       innerLabel: "PRIVATE LOTS",
-      innerLabelFontSize: new_pieInnerLabelFontSize,
-      innerValueFontSize: new_pieInnerValueFontSize,
+      innerLabelFontSize: INNER_LABEL_FONT_SIZE,
+      innerValueFontSize: INNER_VALUE_FONT_SIZE,
       layer: lotLayer,
       statusArray: lot_status_q,
       bkg_color_switch: false,
       seriesFillHash: undefined,
     }).chartDataRenderer();
 
-    return () => {
-      root.dispose();
-    };
-  }, [cpackage, chartData]);
+    pieSeries.data.setAll(chartData);
+    legend.data.setAll(pieSeries.dataItems);
 
-  useEffect(() => {
-    pieSeriesRef.current?.data.setAll(chartData);
-    legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
-  });
+    return () => root.dispose();
+  }, [cpackage, chartData]);
 
   return (
     <>
@@ -297,7 +301,6 @@ const ChartLot = () => {
           >
             TOTAL AFFECTED AREA
           </dt>
-          {/* #d3d3d3 */}
           <dd
             style={{
               color: valueLabelColor,
@@ -324,8 +327,6 @@ const ChartLot = () => {
         </dl>
       </div>
 
-      {}
-
       <div
         style={{
           color: "gray",
@@ -341,7 +342,7 @@ const ChartLot = () => {
 
       {/* Lot Chart */}
       <div
-        id={chartID}
+        id={CHART_ID}
         style={{
           width: "100%",
           height: "57vh",
@@ -407,7 +408,6 @@ const ChartLot = () => {
           >
             HANDED-OVER AREA
           </dt>
-          {/* #d3d3d3 */}
           <dd
             style={{
               color: valueLabelColor,
@@ -435,6 +435,6 @@ const ChartLot = () => {
       </div>
     </>
   );
-}; // End of lotChartgs
+});
 
 export default ChartLot;

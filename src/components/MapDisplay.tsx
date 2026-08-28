@@ -23,12 +23,14 @@ import {
   utilityGroupLayer,
   viaductLayer,
   pierHeadColumnLayer,
+  demolishedStrucLayer,
   sources,
 } from "../layers";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { addLayersToMap } from "../query";
 import { useState } from "react";
+import UndergroundSwitch from "./UndergroundSwitch";
 
 export default function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
@@ -61,6 +63,7 @@ export default function MapDisplay() {
       stationLayer,
       somco_fense_layer,
       handedOverLotLayer,
+      demolishedStrucLayer,
     ]);
 
     arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
@@ -93,6 +96,9 @@ export default function MapDisplay() {
           <arcgis-search></arcgis-search>
         </arcgis-expand>
         <arcgis-zoom slot="bottom-right"></arcgis-zoom>
+
+        {/* Underground switch */}
+        <UndergroundSwitch />
       </arcgis-scene>
     </>
   );

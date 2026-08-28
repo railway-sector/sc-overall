@@ -48,15 +48,6 @@ export const cpackages = [
   "S-07",
 ];
 
-export const monitorLists = [
-  "Land Acquisition",
-  "Structure",
-  "Non Land Owner",
-  "Utility Relocation",
-  "Trees",
-  "Viaduct",
-];
-
 // Media parameters
 export const image_scales = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4];
 export const img_size = 280;
@@ -107,6 +98,7 @@ export const lot_pho_f = "percentHandedOver";
 export const lot_aa_f = "AffectedArea";
 export const lot_tunnel_f = "TunnelAffected";
 export const lot_endorsed_arr = ["Not Endorsed", "Endorsed", "NA"];
+export const lot_pte_f = "PTE";
 
 //--- LOT LAYER ---//
 //Layer Query
@@ -291,6 +283,32 @@ export const lot_access_renderer = new SimpleRenderer({
   }),
 });
 
+//--- PTE STATUS LAYER ---//
+export const lot_pte_renderer = new SimpleRenderer({
+  symbol: new SimpleFillSymbol({
+    color: "#70AD47",
+    style: "forward-diagonal",
+    outline: { width: "6px", color: "#70AD47" },
+  }),
+});
+
+//--- PARTIAL PAYMENT LAYER  ---//
+export const lot_partialPayment_renderer = new UniqueValueRenderer({
+  valueExpression:
+    "When($feature.PartialPayment == 1, 'partialPayment', 'others')",
+  uniqueValueInfos: [
+    {
+      value: "partialPayment",
+      label: " ",
+      symbol: new SimpleFillSymbol({
+        style: "vertical",
+        color: "#a7dbdb",
+        outline: new SimpleLineSymbol({ color: "#a7dbdb", width: "4px" }),
+      }),
+    },
+  ],
+});
+
 //----------------------------------------------//
 //       Structure Layer Parameters             //
 //----------------------------------------------//
@@ -428,6 +446,21 @@ export const str_uniqueV_owner = str_owner_q.map((item: any) => {
 export const str_owner_renderer = new UniqueValueRenderer({
   field: str_owner_status_f,
   uniqueValueInfos: str_uniqueV_owner,
+});
+
+//--- DEMOLISHED STRUCTURE LAYER ---//
+export const demolished_renderer = new UniqueValueRenderer({
+  valueExpression: "When($feature.Demolition == 1, 'Demolished', 'others')",
+  uniqueValueInfos: [
+    {
+      value: "Demolished",
+      label: "Demolished",
+      symbol: new SimpleFillSymbol({
+        color: [0, 255, 255, 0.3],
+        outline: new SimpleLineSymbol({ color: "#00ffff", width: "4px" }),
+      }),
+    },
+  ],
 });
 
 //----------------------------------------------//
@@ -1068,20 +1101,12 @@ export const util_layer_f = "LAYER";
 export const util_height_f = "Height";
 export const util_minScale = 25000;
 
-export const util_type_icons = [
-  "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Sewage_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Power_Logo2.svg",
-  "https://EijiGorilla.github.io/Symbols/Gas_Logo2.svg",
-];
-
 export const util_types = [
-  { value: 1, category: "Telecom", icon: util_type_icons[0] },
-  { value: 2, category: "Water", icon: util_type_icons[1] },
-  { value: 3, category: "Sewage", icon: util_type_icons[2] },
-  { value: 4, category: "Power", icon: util_type_icons[3] },
-  { value: 5, category: "Oil & Gas", icon: util_type_icons[4] },
+  { value: 1, category: "Telecom" },
+  { value: 2, category: "Water" },
+  { value: 3, category: "Sewage" },
+  { value: 4, category: "Power" },
+  { value: 5, category: "Oil & Gas" },
 ];
 
 export const util_status_q = [
@@ -1663,6 +1688,41 @@ function zoomToAction(id: string) {
   ]);
 }
 
+const HIDDEN_TITLES = new Set([
+  "Chainage",
+  "SC Alignment 7.1.6",
+  "SC Alignment 3.9.3",
+  "Substation",
+  "Households Ownership (Structure)",
+  "Super Urgent Lot",
+  "Handed-Over (public + private)",
+  "For Land Optimization",
+  "Land Acquisition (Endorsed Status)",
+  "With Partial Payment",
+  "Tunnel Affected",
+  "Candidate Lots of NSCR-Ex Passenger & Freight Line for Optimization",
+  "Optimized Lots with Issued Notice of Taking",
+  "Structure",
+  "Households",
+  "Occupancy (Structure)",
+  "Proposed Pole Working Areas",
+  "Proposed/Recorded NGCP Lines",
+  "Proposed Pole Relocation",
+  "Proposed East Service Road",
+  "Maintenance Road",
+  "Provision for Freight Line",
+  "Drainage",
+  "Permanent Fencing",
+  "Temporary Fencing",
+  "Handed-Over Area",
+  "Tree Cutting",
+  "Tree Compensation",
+  "Tree Cutting & Compensation",
+  "Utility Relocation",
+  "Pier Head/Column",
+  "Viaduct",
+]);
+
 export async function defineActions(event: any) {
   const { item } = event;
 
@@ -1688,44 +1748,8 @@ export async function defineActions(event: any) {
   }
 
   if (item.layer.type !== "group") {
-    item.panel = {
-      content: "legend",
-      open: true,
-    };
+    item.panel = { content: "legend", open: true };
   }
 
-  item.title === "Chainage" ||
-  item.title === "SC Alignment 7.1.6" ||
-  item.title === "SC Alignment 3.9.3" ||
-  item.title === "Substation" ||
-  item.title === "Households Ownership (Structure)" ||
-  item.title === "Super Urgent Lot" ||
-  item.title === "Handed-Over (public + private)" ||
-  item.title === "For Land Optimization" ||
-  item.title === "Land Acquisition (Endorsed Status)" ||
-  item.title === "Tunnel Affected" ||
-  item.title ===
-    "Candidate Lots of NSCR-Ex Passenger & Freight Line for Optimization" ||
-  item.title === "Optimized Lots with Issued Notice of Taking" ||
-  item.title === "Structure" ||
-  item.title === "Households" ||
-  item.title === "Occupancy (Structure)" ||
-  item.title === "Proposed Pole Working Areas" ||
-  item.title === "Proposed/Recorded NGCP Lines" ||
-  item.title === "Proposed Pole Relocation" ||
-  item.title === "Proposed East Service Road" ||
-  item.title === "Maintenance Road" ||
-  item.title === "Provision for Freight Line" ||
-  item.title === "Drainage" ||
-  item.title === "Permanent Fencing" ||
-  item.title === "Temporary Fencing" ||
-  item.title === "Handed-Over Area" ||
-  item.title === "Tree Cutting" ||
-  item.title === "Tree Compensation" ||
-  item.title === "Tree Cutting & Compensation" ||
-  item.title === "Utility Relocation" ||
-  item.title === "Pier Head/Column" ||
-  item.title === "Viaduct"
-    ? (item.visible = false)
-    : (item.visible = true);
+  item.visible = !HIDDEN_TITLES.has(item.title);
 }

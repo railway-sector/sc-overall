@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useRef, useState, useEffect, memo, use } from "react";
+import { useRef, useState, useEffect, memo, use, useMemo } from "react";
 import { dateUpdate, fieldStatistic, thousands_separators } from "../query";
 import {
   nlo_status_f,
@@ -23,6 +22,11 @@ import { MyContext } from "../contexts/MyContext";
 import ChartPieSeries from "chart-pie-series";
 import { queryDefinitionExpression } from "../queryDefinition";
 import QueryExpressionLayers from "query-layers-expression";
+
+const CHART_ID = "nlo-chart";
+const SERIES_SCALE = 280;
+const INNER_VALUE_FONT_SIZE = "1.3rem";
+const INNER_LABEL_FONT_SIZE = "0.45em";
 
 //--------------------------//
 //        useNloData        //
@@ -71,51 +75,48 @@ function useNloData(cpackage: string, statusField: string, baseFilter: any) {
 //--- (ChartMain) is rendered.
 const ChartNlo = memo(() => {
   const { cpackage } = use(MyContext);
-
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
 
   //--- As of date
-  const { data: date } = useQuery<any>({
+  const { data: asofdate = "" } = useQuery({
     queryKey: ["As_Of_Date"],
-    queryFn: () => dateUpdate("Viaduct"),
+    queryFn: () => dateUpdate("Non Land Owner"),
     staleTime: Infinity,
   });
-  const asofdate = date ?? "";
-
-  //--- Chart parameters
-  const new_fontSize = chartPanelwidth / 22.3;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_imageSize = chartPanelwidth * 0.028;
-  const new_pieSeriesScale = 280;
-  const new_asofDateSize = chartPanelwidth * 0.032;
-  const new_pieInnerValueFontSize = "1.3rem";
-  const new_pieInnerLabelFontSize = "0.45em";
-
-  const pieSeriesRef = useRef<unknown | any | undefined>({});
-  const legendRef = useRef<unknown | any | undefined>({});
-  const chartID = "nlo-chart";
 
   //--- Base filter
-  const baseFilter = {
-    qFields: [cp_f],
-    qValues: [cpackage === "All" ? undefined : cpackage],
-  };
+  const baseFilter = useMemo(
+    () => ({
+      qFields: [cp_f],
+      qValues: [cpackage === "All" ? undefined : cpackage],
+    }),
+    [cpackage],
+  );
 
   //--- Fetch data
   const { data, isLoading } = useNloData(cpackage, nlo_status_f, baseFilter);
+  const chartData = data?.chartData ?? [];
+  const totalNumber = data?.totalNumber ?? 0;
 
-  //--- Call chart data
-  const chartData = data?.chartData || [];
-  const totalNumber = data?.totalNumber || 0;
+  // ************************************
+  //  Responsive Chart parameters
+  // ***********************************
+  const new_fontSize = chartPanelwidth ? chartPanelwidth / 22.3 : 0;
+  const new_valueSize = new_fontSize * 1.55;
+  const new_imageSize = chartPanelwidth ? chartPanelwidth * 0.028 : 0;
+  const new_asofDateSize = chartPanelwidth ? chartPanelwidth * 0.032 : 0;
+
+  const pieSeriesRef = useRef<unknown | any | undefined>({});
+  const legendRef = useRef<unknown | any | undefined>({});
 
   useEffect(() => {
-    const root = rootSetter({ chartID: chartID });
-    const chart = chartSetter({ root: root, y: -10 });
+    const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+    const root = rootSetter({ chartID: CHART_ID });
+    const chart = chartSetter({ root, y: -10 });
 
     const pieSeries = seriesSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       categoryField: "category",
       valueField: "value",
       legendLabelText: "{category}",
@@ -127,18 +128,17 @@ const ChartNlo = memo(() => {
     chart.series.push(pieSeries);
 
     const legend = legendSetter({
-      chart: chart,
-      root: root,
+      chart,
+      root,
       centerX: 50,
       x: 50,
     });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    // Render chart
     new ChartPieSeriesRender({
       chart,
-      pieSeries: pieSeries,
+      pieSeries,
       legend,
       root,
       qChart: data?.q1,
@@ -147,25 +147,21 @@ const ChartNlo = memo(() => {
       view: arcgisScene?.view,
       updateChartPanelwidth: setChartPanelwidth,
       data: chartData,
-      seriesScale: new_pieSeriesScale,
+      seriesScale: SERIES_SCALE,
       innerLabel: "HOUSEHOLDS",
-      innerLabelFontSize: new_pieInnerLabelFontSize,
-      innerValueFontSize: new_pieInnerValueFontSize,
+      innerLabelFontSize: INNER_LABEL_FONT_SIZE,
+      innerValueFontSize: INNER_VALUE_FONT_SIZE,
       layer: nloLayer,
       statusArray: nlo_status_q,
       bkg_color_switch: false,
       seriesFillHash: undefined,
     }).chartDataRenderer();
 
-    return () => {
-      root.dispose();
-    };
-  }, [chartID, chartData]);
+    pieSeries.data.setAll(chartData);
+    legend.data.setAll(pieSeries.dataItems);
 
-  useEffect(() => {
-    pieSeriesRef.current?.data.setAll(chartData);
-    legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
-  });
+    return () => root.dispose();
+  }, [chartData]);
 
   return (
     <>
@@ -224,7 +220,7 @@ const ChartNlo = memo(() => {
         {asofdate ? `As of ${asofdate}` : `As of `}
       </div>
       <div
-        id={chartID}
+        id={CHART_ID}
         style={{
           height: "70vh",
           backgroundColor: "rgb(0,0,0,0)",
@@ -234,6 +230,6 @@ const ChartNlo = memo(() => {
       ></div>
     </>
   );
-}); // End of lotChartgs
+});
 
 export default ChartNlo;
