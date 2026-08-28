@@ -56,6 +56,7 @@ function useLotData(
   afaField: string,
   hoField: string,
   baseFilter: any,
+  lot_status_q2: any,
 ) {
   return useQuery<ChartResponse | any>({
     queryKey: [lot_status_f, lotLayer, cpackage, baseFilter],
@@ -97,7 +98,7 @@ function useLotData(
       ] = await Promise.all([
         new ChartPieSeries({
           ...baseArgs,
-          statusList: lot_status_q,
+          statusList: lot_status_q2,
           statusField: statusField,
           statisticField: statusField,
         }).pieSeries(),
@@ -147,6 +148,14 @@ const ChartLot = memo(() => {
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const [handedOverCheckBox, setHandedOverCheckBox] = useState<any>(false);
 
+  const lot_status_q2 = useMemo(
+    () =>
+      lot_status_q.map((item) =>
+        item.value === 6 ? { ...item, category: "With CNO" } : item,
+      ),
+    [],
+  );
+
   //--- As of date
   const { data: asofdate = "" } = useQuery({
     queryKey: ["As_Of_Date"],
@@ -171,6 +180,7 @@ const ChartLot = memo(() => {
     lot_aa_f,
     lot_ho_f,
     baseFilter,
+    lot_status_q2,
   );
 
   const chartData = data?.chartData ?? [];
@@ -251,7 +261,7 @@ const ChartLot = memo(() => {
       innerLabelFontSize: INNER_LABEL_FONT_SIZE,
       innerValueFontSize: INNER_VALUE_FONT_SIZE,
       layer: lotLayer,
-      statusArray: lot_status_q,
+      statusArray: lot_status_q2,
       bkg_color_switch: false,
       seriesFillHash: undefined,
     }).chartDataRenderer();

@@ -108,7 +108,11 @@ export const lot_status_q = [
   { value: 3, category: "For Legal Pass", color: "#ffff00" },
   { value: 4, category: "For Offer to Buy", color: "#ffaa00" },
   { value: 5, category: "For Notice of Taking", color: "#FF5733" },
-  { value: 6, category: "With PTE", color: "#70AD47" },
+  {
+    value: 6,
+    category: "With Certificate with No Objection (CNO)",
+    color: "#E2F4C5",
+  },
   { value: 7, category: "For Expropriation", color: "#6f0000" },
   { value: 8, category: "Optimized", color: "#B2B2B2" },
 ];
@@ -284,14 +288,20 @@ export const lot_access_renderer = new SimpleRenderer({
 });
 
 //--- PTE STATUS LAYER ---//
-export const lot_pte_renderer = new SimpleRenderer({
-  symbol: new SimpleFillSymbol({
-    color: "#70AD47",
-    style: "forward-diagonal",
-    outline: { width: "6px", color: "#70AD47" },
-  }),
+export const lot_pte_renderer = new UniqueValueRenderer({
+  valueExpression: "When($feature.PTE == 1, 'pte', 'others')",
+  uniqueValueInfos: [
+    {
+      value: "pte",
+      label: " ",
+      symbol: new SimpleFillSymbol({
+        style: "forward-diagonal",
+        color: "#70AD47",
+        outline: { width: "6px", color: "#70AD47" },
+      }),
+    },
+  ],
 });
-
 //--- PARTIAL PAYMENT LAYER  ---//
 export const lot_partialPayment_renderer = new UniqueValueRenderer({
   valueExpression:
@@ -329,12 +339,6 @@ export const rgb = [
 ];
 
 export const str_status_q = [
-  {
-    value: 1,
-    category: "Demolished",
-    color: "#00C5FF",
-    colrgb: rgb[0],
-  },
   { value: 2, category: "Paid", color: "#70AD47", colrgb: rgb[1] },
   {
     value: 3,
