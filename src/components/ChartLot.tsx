@@ -27,7 +27,7 @@ import {
 } from "../uniqueValues";
 import "@arcgis/map-components/dist/components/arcgis-scene";
 import "@arcgis/map-components/components/arcgis-scene";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import {
   chartSetter,
@@ -40,11 +40,6 @@ import ChartPieSeries from "chart-pie-series";
 import { MyContext } from "../contexts/MyContext";
 import { queryDefinitionExpression } from "../queryDefinition";
 import QueryExpressionLayers from "query-layers-expression";
-
-const CHART_ID = "pie-two";
-const SERIES_SCALE = 220;
-const INNER_VALUE_FONT_SIZE = "1.1rem";
-const INNER_LABEL_FONT_SIZE = "0.45em";
 
 //--------------------------//
 //      useLotData          //
@@ -92,6 +87,7 @@ function useLotData(
       const [
         chartData,
         totalNumber,
+        privateLots,
         affectedArea,
         handedOverArea,
         handedOverNumber,
@@ -105,6 +101,14 @@ function useLotData(
 
         //--- Total number of lots (public + private)
         fieldStatistic({ ...baseArgs, statisticField: lot_id_f }),
+
+        //--- Total number of private lots
+        fieldStatistic({
+          where: `${q1.queryExpression()} AND ${statusField} >= 1`,
+          layer: lotLayer,
+          statisticField: statusField,
+          statisticType: "count",
+        }),
 
         //--- Total affected area (m2)
         fieldStatistic({ ...baseArgs2, statisticField: afaField }),
@@ -129,6 +133,7 @@ function useLotData(
       return {
         chartData,
         totalNumber,
+        privateLots,
         affectedArea,
         handedOverArea,
         handedOverNumber,
@@ -136,6 +141,7 @@ function useLotData(
         query: q1,
       };
     },
+    placeholderData: keepPreviousData,
     staleTime: Infinity,
   });
 }
@@ -145,8 +151,10 @@ function useLotData(
 //--------------------------------------------//
 const ChartLot = memo(() => {
   const { cpackage } = use(MyContext);
+
+  const arcgisScene = document.querySelector("arcgis-scene");
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-  const [handedOverCheckBox, setHandedOverCheckBox] = useState<any>(false);
+  const [hoCheckbox, setHoCheckbox] = useState<any>(false);
 
   const lot_status_q2 = useMemo(
     () =>
@@ -185,6 +193,7 @@ const ChartLot = memo(() => {
 
   const chartData = data?.chartData ?? [];
   const totalNumber = data?.totalNumber ?? 0;
+  const privateLots = thousands_separators(data?.privateLots ?? 0);
   const affectedArea = data?.affectedArea ?? 0;
   const handedOverArea = data?.handedOverArea ?? 0;
   const handedOverNumber = data?.handedOverNumber ?? 0;
@@ -193,33 +202,60 @@ const ChartLot = memo(() => {
   // ************************************
   //  Responsive Chart parameters
   // ***********************************
-  const new_fontSize = chartPanelwidth ? chartPanelwidth / 30 : 0;
-  const new_valueSize = chartPanelwidth ? chartPanelwidth / 19 : 0;
-  const new_asofDateSize = chartPanelwidth ? chartPanelwidth * 0.03 : 0;
+  const fontSize = chartPanelwidth ? chartPanelwidth / 30 : 0;
+  const valueSize = chartPanelwidth ? chartPanelwidth / 19 : 0;
+  const asofDateSize = chartPanelwidth ? chartPanelwidth * 0.03 : 0;
+  const seriesScale = 220;
+  const innerValueFontSize = "1.1rem";
+  const innerLabelFontSize = "0.45em";
 
   const pieSeriesRef = useRef<any>(null);
   const legendRef = useRef<any>(null);
+  // const chartRef = useRef<any>(null);
+  const rendererRef = useRef<ChartPieSeriesRender | null>(null);
+  const chartID = "pie-two";
 
-  //--- Show handed-over lots
+  //--- Toggle handed-over layer visibility
   useEffect(() => {
-    handedOverLotLayer.visible = handedOverCheckBox;
-  }, [handedOverCheckBox]);
+    handedOverLotLayer.visible = hoCheckbox;
+  }, [hoCheckbox]);
 
+  //--- Zoom on package change, then draw chart
   const zoomFiltersRef = useRef(`${cpackage}`);
 
   useEffect(() => {
-    const arcgisScene = document.querySelector("arcgis-scene");
-
-    //--- Zoom after 1st render
     const currentZoomFilters = `${cpackage}`;
+
     if (currentZoomFilters !== zoomFiltersRef.current) {
       zoomFiltersRef.current = currentZoomFilters;
       zoomToLayer(lotLayer, arcgisScene?.view);
     }
+  }, [chartData]);
 
-    const root = rootSetter({ chartID: CHART_ID });
-    root.setThemes([]);
-    const chart = chartSetter({ root, y: 10 });
+  //--- Keep click-handler-relevant values fresh without rebuilding the
+  //    chart. view lives here too (not passed statically to the
+  //    renderer) since arcgis-scene's view may not be ready on first
+  //    mount.
+  const configRef = useRef({
+    qChart: data?.query,
+    q2Expression: undefined,
+    status_field: lot_status_f,
+    view: arcgisScene?.view,
+  });
+  useEffect(() => {
+    configRef.current = {
+      qChart: data?.query,
+      q2Expression: undefined,
+      status_field: lot_status_f,
+      view: arcgisScene?.view,
+    };
+  }, [data, lot_status_f, arcgisScene]);
+
+  //---  Pie Chart Renderer — created ONCE (mount only)
+  useEffect(() => {
+    const root = rootSetter({ chartID: chartID });
+    const chart = chartSetter({ root: root, y: 10 });
+    // chartRef.current = chart;
 
     const pieSeries = seriesSetter({
       chart,
@@ -245,32 +281,52 @@ const ChartLot = memo(() => {
     legend.setAll({ marginBottom: 10 });
     legend.data.setAll(pieSeries.dataItems);
 
-    new ChartPieSeriesRender({
+    //--- NOTE: no `view` here — it's read live from configRef.current
+    //    inside chartrender.ts, since arcgis-scene may not have a
+    //    ready `.view` yet at this point.
+    const renderer = new ChartPieSeriesRender({
       chart,
       pieSeries,
       legend,
       root,
-      qChart: data?.query,
-      q2Expression: undefined,
-      status_field: lot_status_f,
-      view: arcgisScene?.view,
+      configRef,
       updateChartPanelwidth: setChartPanelwidth,
-      data: chartData,
-      seriesScale: SERIES_SCALE,
+      data: [],
+      seriesScale,
+      innerValue: privateLots,
       innerLabel: "PRIVATE LOTS",
-      innerLabelFontSize: INNER_LABEL_FONT_SIZE,
-      innerValueFontSize: INNER_VALUE_FONT_SIZE,
+      innerLabelFontSize,
+      innerValueFontSize,
       layer: lotLayer,
       statusArray: lot_status_q2,
       bkg_color_switch: false,
       seriesFillHash: undefined,
-    }).chartDataRenderer();
+    });
+    rendererRef.current = renderer;
+    rendererRef.current.chartDataRenderer();
 
-    pieSeries.data.setAll(chartData);
-    legend.data.setAll(pieSeries.dataItems);
+    return () => {
+      root.dispose();
+      rendererRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-once — do not add dependencies here
 
-    return () => root.dispose();
-  }, [cpackage, chartData]);
+  //--- Push new data / inner value / affected-area figures into the
+  //    already-mounted chart. No dispose, no rebuild -> no blink.
+  //    NOTE: affectedAreaValue is NOT called here directly — it's
+  //    registered once inside chartrender.ts and reads live data via
+  //    closures, which updateData() keeps in sync. Calling it here on
+  //    every render would both miss the first paint and stack
+  //    duplicate adapters.
+  useEffect(() => {
+    if (!rendererRef.current) return;
+    rendererRef.current.updateData(
+      chartData,
+      privateLots,
+      lot_status_q2.map((f: any) => f.category),
+    );
+  }, [chartData, privateLots]);
 
   return (
     <>
@@ -285,15 +341,13 @@ const ChartLot = memo(() => {
         }}
       >
         <dl style={{ alignItems: "center" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: primaryLabelColor, fontSize: `${fontSize}px` }}>
             TOTAL LOTS
           </dt>
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
@@ -306,15 +360,13 @@ const ChartLot = memo(() => {
           </dd>
         </dl>
         <dl style={{ alignItems: "center" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: primaryLabelColor, fontSize: `${fontSize}px` }}>
             TOTAL AFFECTED AREA
           </dt>
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
@@ -324,9 +376,7 @@ const ChartLot = memo(() => {
             }}
           >
             {thousands_separators(affectedArea.toFixed(0))}
-            <label
-              style={{ fontWeight: "normal", fontSize: `${new_fontSize}px` }}
-            >
+            <label style={{ fontWeight: "normal", fontSize: `${fontSize}px` }}>
               {" "}
               m
             </label>
@@ -340,7 +390,7 @@ const ChartLot = memo(() => {
       <div
         style={{
           color: "gray",
-          fontSize: `${new_asofDateSize}px`,
+          fontSize: `${asofDateSize}px`,
           float: "right",
           marginRight: "1%",
           marginTop: "1.5%",
@@ -352,7 +402,7 @@ const ChartLot = memo(() => {
 
       {/* Lot Chart */}
       <div
-        id={CHART_ID}
+        id={chartID}
         style={{
           width: "100%",
           height: "57vh",
@@ -386,21 +436,17 @@ const ChartLot = memo(() => {
             name="handover-checkbox"
             label="VIEW"
             scale="l"
-            oncalciteCheckboxChange={() =>
-              setHandedOverCheckBox((prev: any) => !prev)
-            }
+            oncalciteCheckboxChange={() => setHoCheckbox((prev: any) => !prev)}
           ></calcite-checkbox>
         </div>
         <dl style={{ alignItems: "center" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: primaryLabelColor, fontSize: `${fontSize}px` }}>
             TOTAL HANDED-OVER
           </dt>
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
@@ -413,15 +459,13 @@ const ChartLot = memo(() => {
           </dd>
         </dl>
         <dl style={{ alignItems: "center" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: primaryLabelColor, fontSize: `${fontSize}px` }}>
             HANDED-OVER AREA
           </dt>
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
@@ -431,9 +475,7 @@ const ChartLot = memo(() => {
             }}
           >
             {thousands_separators(handedOverArea.toFixed(0))}
-            <label
-              style={{ fontWeight: "normal", fontSize: `${new_fontSize}px` }}
-            >
+            <label style={{ fontWeight: "normal", fontSize: `${fontSize}px` }}>
               {" "}
               m
             </label>
