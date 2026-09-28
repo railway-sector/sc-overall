@@ -295,11 +295,11 @@ const ChartLot = memo(() => {
       seriesScale,
       innerValue: privateLots,
       innerLabel: "PRIVATE LOTS",
+      innerLabelColor: "#ffffff",
       innerLabelFontSize,
       innerValueFontSize,
       layer: lotLayer,
       statusArray: lot_status_q2,
-      bkg_color_switch: false,
       seriesFillHash: undefined,
     });
     rendererRef.current = renderer;
