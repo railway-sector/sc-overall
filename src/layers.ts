@@ -19,6 +19,8 @@ import {
   lot_pte_renderer,
   lot_pte_f,
   demolished_renderer,
+  relocated_renderer,
+  str_occup_f,
 } from "./uniqueValues";
 
 import {
@@ -490,6 +492,20 @@ export const nloLayer = new FeatureLayer({
   maxScale: 0,
   popupTemplate: nlo_popup,
 });
+
+export const relocatedLayer = new FeatureLayer({
+  portalItem: portalItems("99500faf0251426ea1df934a739faa6f"),
+  layerId: 3,
+  renderer: relocated_renderer,
+  title: "Relocated Households",
+  elevationInfo: { mode: "relative-to-scene" },
+  popupEnabled: false,
+  definitionExpression: `${str_occup_f} = 1`,
+  minScale: 30000,
+  maxScale: 0,
+  visible: false,
+});
+relocatedLayer.listMode = "hide";
 
 //--- HOUSEHOLDS OCCUPANCY (STATUS OF RELOCATION) ---//
 export const occupancyLayer = new FeatureLayer({

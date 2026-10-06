@@ -1,14 +1,20 @@
 import { useRef, useState, useEffect, memo, use, useMemo } from "react";
-import { dateUpdate, fieldStatistic, thousands_separators } from "../query";
+import {
+  dateUpdate,
+  fieldStatistic,
+  thousands_separators,
+  zoomToLayer,
+} from "../query";
 import {
   nlo_status_f,
   primaryLabelColor,
   nlo_status_q,
   valueLabelColor,
   cp_f,
+  str_occup_f,
 } from "../uniqueValues";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
-import { nloLayer } from "../layers";
+import { nloLayer, relocatedLayer } from "../layers";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import {
@@ -22,6 +28,7 @@ import { MyContext } from "../contexts/MyContext";
 import ChartPieSeries from "chart-pie-series";
 import { queryDefinitionExpression } from "../queryDefinition";
 import QueryExpressionLayers from "query-layers-expression";
+import StatBlock from "./statBlock";
 
 //--------------------------//
 //        useNloData        //
@@ -30,6 +37,13 @@ function useNloData(cpackage: string, statusField: string, baseFilter: any) {
   return useQuery<ChartResponse | any>({
     queryKey: [cpackage, statusField, nloLayer],
     queryFn: async () => {
+      const baseArgs = {
+        layer: nloLayer,
+        statisticField: "OBJECTID",
+        statisticType: "count" as const,
+      };
+
+      //-- Households with NLO query
       const q1 = new QueryExpressionLayers({
         ...baseFilter,
         qExpression: `${nlo_status_f} >= 1`,
@@ -40,32 +54,50 @@ function useNloData(cpackage: string, statusField: string, baseFilter: any) {
         featureLayer: [nloLayer],
       });
 
-      const baseArgs = {
-        layer: nloLayer,
-        statisticField: "OBJECTID",
-        statisticType: "count" as const,
+      //--- Relocated Households query
+      const q2 = new QueryExpressionLayers({
+        ...baseFilter,
+        qExpression: `${str_occup_f} = 1`,
+      });
+
+      queryDefinitionExpression({
+        queryExpression: q2.queryExpression(),
+        featureLayer: [relocatedLayer],
+      });
+
+      const [chartData, totalNumber, totalHouseholds, totalRelocated] =
+        await Promise.all([
+          new ChartPieSeries({
+            ...baseArgs,
+            where: q1.queryExpression(),
+            statusList: nlo_status_q,
+            statusField: nlo_status_f,
+          }).pieSeries(),
+
+          fieldStatistic({
+            ...baseArgs,
+            where: new QueryExpressionLayers({
+              ...baseFilter,
+            }).queryExpression(),
+          }),
+
+          fieldStatistic({ ...baseArgs, where: q1.queryExpression() }),
+          fieldStatistic({ ...baseArgs, where: q2.queryExpression() }),
+        ]);
+
+      //--- Relocated percent
+      const percRelocated = Number(
+        ((totalRelocated / totalNumber) * 100).toFixed(0),
+      );
+
+      return {
+        chartData,
+        totalNumber,
+        totalHouseholds,
+        totalRelocated,
+        percRelocated,
+        q1,
       };
-
-      const [chartData, totalNumber, totalHouseholds] = await Promise.all([
-        new ChartPieSeries({
-          ...baseArgs,
-          where: q1.queryExpression(),
-          statusList: nlo_status_q,
-          statusField: nlo_status_f,
-        }).pieSeries(),
-
-        fieldStatistic({
-          ...baseArgs,
-          where: new QueryExpressionLayers({ ...baseFilter }).queryExpression(),
-        }),
-
-        fieldStatistic({
-          ...baseArgs,
-          where: q1.queryExpression(),
-        }),
-      ]);
-
-      return { chartData, totalNumber, totalHouseholds, q1 };
     },
     placeholderData: keepPreviousData,
     refetchOnMount: false,
@@ -81,6 +113,7 @@ const ChartNlo = memo(() => {
 
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+  const [relocatedCheckBox, setRelocatedCheckBox] = useState<any>(false);
 
   //--- As of date
   const { data: asofdate = "" } = useQuery({
@@ -88,6 +121,13 @@ const ChartNlo = memo(() => {
     queryFn: () => dateUpdate("Non Land Owner"),
     staleTime: Infinity,
   });
+
+  useEffect(() => {
+    relocatedLayer.visible = relocatedCheckBox;
+
+    if (!relocatedCheckBox) return;
+    zoomToLayer(relocatedLayer, arcgisScene?.view);
+  }, [relocatedCheckBox]);
 
   //--- Base filter
   const baseFilter = useMemo(
@@ -103,6 +143,8 @@ const ChartNlo = memo(() => {
   const chartData = data?.chartData ?? [];
   const totalNumber = data?.totalNumber ?? 0;
   const totalHouseholds = thousands_separators(data?.totalHouseholds ?? 0);
+  const totalRelocated = thousands_separators(data?.totalRelocated ?? 0);
+  const percRelocated = data?.percRelocated ?? 0;
 
   // ************************************
   //  Responsive Chart parameters
@@ -110,7 +152,7 @@ const ChartNlo = memo(() => {
   const fontSize = chartPanelwidth ? chartPanelwidth / 22.3 : 0;
   const valueSize = chartPanelwidth / 19;
   const imageSize = chartPanelwidth ? chartPanelwidth * 0.028 : 0;
-  const seriesScale = 280;
+  const seriesScale = 220;
   const asofDateSize = chartPanelwidth ? chartPanelwidth * 0.032 : 0;
   const innerValueFontSize = "1.3rem";
   const innerLabelFontSize = "0.7em";
@@ -152,9 +194,8 @@ const ChartNlo = memo(() => {
       valueField: "value",
       legendLabelText: "{category}",
       legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
-      radius: 45,
+      radius: 40,
       innerRadius: 28,
-      // scale: 1.7,
     });
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
@@ -270,12 +311,45 @@ const ChartNlo = memo(() => {
       <div
         id={chartID}
         style={{
-          height: "70vh",
+          height: "60vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           opacity: isLoading ? 0 : 1,
         }}
       ></div>
+
+      {/* Total Relocated*/}
+      <div
+        style={{
+          display: "flex",
+          marginLeft: "3%",
+          marginRight: "5%",
+          justifyContent: "center",
+          gap: "25%",
+          marginTop: "1%",
+        }}
+      >
+        <div
+          style={{ backgroundColor: "green", height: "0", marginTop: "13px" }}
+        >
+          <calcite-checkbox
+            name="relocated-households-checkbox"
+            label="VIEW"
+            scale="l"
+            oncalciteCheckboxChange={() =>
+              setRelocatedCheckBox((prev: any) => !prev)
+            }
+          ></calcite-checkbox>
+        </div>
+        <StatBlock
+          label="TOTAL RELOCATED"
+          value={`${percRelocated}% (${totalRelocated})`}
+          fontSize={fontSize}
+          valueSize={valueSize}
+          isLoading={isLoading}
+          textAlign="center"
+        />
+      </div>
     </>
   );
 });
