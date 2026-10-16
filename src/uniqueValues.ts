@@ -229,6 +229,15 @@ export const lot_lu_arr = [
   "Special Exempt",
 ];
 
+//--- FREE AND CLEAR LOTS ---//
+export const free_and_clear_renderer = new SimpleRenderer({
+  symbol: new SimpleFillSymbol({
+    color: [129, 129, 129, 0.5],
+    style: "solid",
+    outline: { color: primaryLabelColor, width: "3.5px" },
+  }),
+});
+
 //--- HANDED-OVER LOTS (PUBLIC + PRIATE LOTS) ---//
 export const lot_ho_renderer = new UniqueValueRenderer({
   valueExpression:
@@ -1728,7 +1737,9 @@ const HIDDEN_TITLES = new Set([
   "Substation",
   "Households Ownership (Structure)",
   "Super Urgent Lot",
+  "Free and Clear Lots",
   "Handed-Over (public + private)",
+  "Handed-Over Area",
   "For Land Optimization",
   "Land Acquisition (Endorsed Status)",
   "With Partial Payment",
@@ -1748,7 +1759,6 @@ const HIDDEN_TITLES = new Set([
   "Drainage",
   "Permanent Fencing",
   "Temporary Fencing",
-  "Handed-Over Area",
   "Tree Cutting",
   "Tree Compensation",
   "Tree Cutting & Compensation",

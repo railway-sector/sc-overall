@@ -16,8 +16,6 @@ import {
   lotGroupLayer,
   ngcp7_groupLayer,
   ngcp6_groupLayer,
-  somco_fense_layer,
-  handedOverLotLayer,
   pierAccessLayer,
   treeGroupLayer,
   utilityGroupLayer,
@@ -62,8 +60,6 @@ export default function MapDisplay() {
       nloLoOccupancyGroupLayer,
       alignmentGroupLayer,
       stationLayer,
-      somco_fense_layer,
-      handedOverLotLayer,
       demolishedStrucLayer,
       relocatedLayer,
     ]);
