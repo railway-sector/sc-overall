@@ -1,1 +1,0 @@
-import{dS as m}from"./index-DHpvL80X.js";import{d as s}from"./queryTopFeatures--disXldL.js";import e from"./TopFeaturesQuery-DwhMpOXS.js";async function i(o,r,t){const a=m(o);return(await s(a,e.from(r),{...t})).data.objectIds}export{i as executeForTopIds};
