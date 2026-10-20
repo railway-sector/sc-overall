@@ -1737,7 +1737,7 @@ const HIDDEN_TITLES = new Set([
   "Substation",
   "Households Ownership (Structure)",
   "Super Urgent Lot",
-  "Free and Clear Lots",
+  "Free & Clear Areas Information",
   "Handed-Over (public + private)",
   "Handed-Over Area",
   "For Land Optimization",

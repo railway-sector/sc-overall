@@ -423,7 +423,7 @@ export const freeAndClearLotLayer = new FeatureLayer({
   layerId: 6,
   renderer: free_and_clear_renderer,
   popupTemplate: lot_popup,
-  title: "Free and Clear Lots",
+  title: "Free & Clear Areas Information",
   elevationInfo: { mode: "on-the-ground" },
 });
 
