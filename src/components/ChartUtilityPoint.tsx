@@ -108,7 +108,8 @@ const ChartUtilityPoint = memo(() => {
 
   //--- Progress stats
   const { totalComp, percComp } = useMemo(() => {
-    if (!data?.chartData) return { totalComp: 0, percComp: 0 };
+    if (!data?.chartData || !utilityLinestats)
+      return { totalComp: 0, percComp: 0 };
     const totalComp = data.chartData[3] + utilityLinestats[3];
     const totaln = data.chartData[1] + utilityLinestats[1];
     return {
