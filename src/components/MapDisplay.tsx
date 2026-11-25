@@ -67,7 +67,7 @@ export default function MapDisplay() {
     arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
     arcgisSearch.includeDefaultSourcesDisabled = true;
     arcgisSearch.locationDisabled = true;
-    arcgisSearch?.sources.push(...sources);
+    arcgisSearch.sources = sources;
     arcgisScene.hideAttribution = true;
     arcgisScene.view.environment.atmosphereEnabled = false;
     arcgisScene.view.environment.starsEnabled = false;
