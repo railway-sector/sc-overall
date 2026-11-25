@@ -1,0 +1,1 @@
+import{W as p,R as a}from"./OperatorContains-Ciy764GI.js";import"./index-BzB26h8M.js";import"./Envelope2D-D3XKtIW0.js";import"./MultiPathImpl-BShqQLQQ.js";class l extends p{getOperatorType(){return 2}execute(r,e,t,o){return a(r,e,t,3,o)}}export{l as OperatorEquals};
